@@ -1,0 +1,9 @@
+id: "kafka-workshop"
+name: "Deploying Kafka using AMQ streams - Starter Lab"
+
+content:
+  url: https://raw.githubusercontent.com/radudd/workshopper-template/master
+
+modules:
+  activate:
+  - kafka
