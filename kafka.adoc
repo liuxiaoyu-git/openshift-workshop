@@ -1,7 +1,6 @@
 ### Install Kafka cluster
 
-#### Deploy Kafka custom resource
-
+Deploy Kafka custom resource
 
 ----
 cat <<EOF | oc create -f - 
@@ -40,7 +39,7 @@ spec:
 EOF
 ----
 
-#### Create a topic
+Create a topic
 
 ----
 cat <<EOF | oc create -f -
@@ -56,22 +55,24 @@ spec:
 EOF
 ----
 
-### Test send and receive messages inside cluster
+### Test sending and receiving messages inside the cluster
 
 ----
 oc -n kafka run kafka-producer -ti --image=strimzi/kafka:0.14.0-kafka-2.3.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --broker-list ws-kafka-bootstrap:9092 --topic my-topic
 oc -n kafka run kafka-consumer -ti --image=strimzi/kafka:0.14.0-kafka-2.3.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server ws-kafka-bootstrap:9092 --topic my-topic --from-beginning
 ----
 
-### Send and receive messages outside cluster
+### Test sending and receiving messages outside cluster
 
-#### Create truststore
+Create truststore
+
 ----
 oc get secret ws-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 --decode > ca.crt
 keytool -import -trustcacerts -alias root -file ca.crt -keystore truststore.jks -storepass 123456 -noprompt
 ----
 
-#### Create a Kafka user
+Create a Kafka user
+
 ----
 cat <<EOF | oc create -f -
 apiVersion: kafka.strimzi.io/v1alpha1
@@ -86,7 +87,8 @@ spec:
 EOF
 ----
 
-#### Create keystore
+Create keystore
+
 ----
 oc create -f user.yaml
 oc extract secret/test --keys=user.crt --to=- > user.crt
@@ -94,19 +96,21 @@ oc extract secret/test --keys=user.key --to=- > user.key
 openssl pkcs12 -export -in user.crt -inkey user.key -name test -password pass:123456 -out user.p12
 ----
 
-#### Download Kafka binaries
+Download Kafka binaries
+
 ----
 curl -O http://www.pirbot.com/mirrors/apache/kafka/2.3.1/kafka_2.12-2.3.1.tgz
 tar zxvf kafka_2.12-2.3.1.tgz
 ln -s kafka_2.12-2.3.1 kafka 
 ----
 
-#### Run producer
+Run a producer
+
 ----
 kafka/bin/kafka-console-producer.sh --broker-list ws-kafka-bootstrap-kafka.apps.ocp.bdmsky.net:443 --producer-property security.protocol=SSL --producer-property ssl.truststore.password=123456 --producer-property ssl.truststore.location=./truststore.jks  --producer-property ssl.keystore.password=123456 --producer-property ssl.keystore.location=./user.p12 --topic orders
 ----
 
-#### Run consumer (separate window)
+Run a consumer (in a separate window)
 ----
 kafka/bin/kafka-console-consumer.sh --bootstrap-server ws-kafka-bootstrap-kafka.apps.ocp.bdmsky.net:443 --consumer-property security.protocol=SSL --consumer-property ssl.truststore.password=123456 --consumer-property ssl.truststore.location=./truststore.jks  --consumer-property ssl.keystore.password=123456 --consumer-property ssl.keystore.location=./user.p12 --topic orders --from-beginning
 ----
