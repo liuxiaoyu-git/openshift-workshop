@@ -3,4 +3,4 @@ config:
 
 modules:
   kafka:
-    name: AMQ Streams
+    name: Install a Kafka cluster
