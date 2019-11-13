@@ -111,6 +111,7 @@ kafka/bin/kafka-console-producer.sh --broker-list ws-kafka-bootstrap-kafka.apps.
 ----
 
 Run a consumer (in a separate window)
+
 ----
 kafka/bin/kafka-console-consumer.sh --bootstrap-server ws-kafka-bootstrap-kafka.apps.ocp.bdmsky.net:443 --consumer-property security.protocol=SSL --consumer-property ssl.truststore.password=123456 --consumer-property ssl.truststore.location=./truststore.jks  --consumer-property ssl.keystore.password=123456 --consumer-property ssl.keystore.location=./user.p12 --topic orders --from-beginning
 ----
