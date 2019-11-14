@@ -105,7 +105,7 @@ Now you can create an example CR. Notice that the generated CR is not valid.
 
 
 ```{bash}
-operator-sdk build --image-builder docker {IMAGE_REGISTRY}/{username}/gooperators/restaurant-operator:latest
+operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
 ...
 INFO[0008] Operator build complete.
 ```
@@ -113,7 +113,7 @@ INFO[0008] Operator build complete.
 Push the image to your quay.io repository (make sure the repository is public for this workshop)
 
 ```{bash}
-docker push {IMAGE_REGISTRY}/{username}/gooperators/restaurant-operator:latest
+docker push {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
 ```
 
 ### Deploy the Operator in your Kubernetes cluster
@@ -121,7 +121,7 @@ docker push {IMAGE_REGISTRY}/{username}/gooperators/restaurant-operator:latest
 Before deploying the Operator make sure you replaced all the placeholders:
 
 ```{bash}
-sed -i 's|REPLACE_IMAGE|{IMAGE_REGISTRY}/{username}/gooperators/restaurant-operator:latest|g' deploy/operator.yaml
+sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest|g' deploy/operator.yaml
 ```
 
 Create the CRD (if you haven't done it yet)
