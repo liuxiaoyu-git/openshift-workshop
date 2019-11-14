@@ -1,6 +1,6 @@
-### Create your first Go operator
+## Create your first Go operator
 
-#### Requirements
+### Requirements
 
 * Git
 * Go version 1.12.x
@@ -10,8 +10,7 @@
 * Access to a Kubernetes or an OpenShift cluster
 * Quay account
 
-
-#### Skaffolding project
+### Skaffolding project
 
 Note: You can chose between using dep or modules. Modules are used by default. In next versions it will also be added support by default for external vendoring (i.e. `--vendor=false`).
 
@@ -44,7 +43,7 @@ After that we can see the following changed:
 
 ### Create the controller for our CRD
 
-```{bash}
+```
 operator-sdk add controller --api-version=restaurant.workshop.redhat.com/v1alpha1 --kind=Restaurant
 ```
 
@@ -68,7 +67,7 @@ type RestaurantSpec struct {
 
 When finished, run the following to update the generated code:
 
-```{bash}
+```
 operator-sdk generate k8s
 ```
 
@@ -76,7 +75,7 @@ Note: Run this command each time you change the types
 
 ### Generate the OpenAPI validation
 
-```{bash}
+```
 operator-sdk generate openapi
 ```
 
@@ -92,7 +91,7 @@ Note: Run this command only when you want to replace the CRD with the new genera
 
 ### Run the Operator locally
 
-```{bash}
+```
 oc project go-operator-tutorial
 oc create -f deploy/crds/restaurant_v1alpha1_restaurant_crd.yaml
 go mod vendor
@@ -104,7 +103,7 @@ Now you can create an example CR. Notice that the generated CR is not valid.
 ### Build the Operator
 
 
-```{bash}
+```
 operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
 ...
 INFO[0008] Operator build complete.
@@ -112,7 +111,7 @@ INFO[0008] Operator build complete.
 
 Push the image to your quay.io repository (make sure the repository is public for this workshop)
 
-```{bash}
+```
 docker push {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
 ```
 
@@ -120,20 +119,20 @@ docker push {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
 
 Before deploying the Operator make sure you replaced all the placeholders:
 
-```{bash}
+```
 sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest|g' deploy/operator.yaml
 ```
 
 Create the CRD (if you haven't done it yet)
 
-```{bash}
+```
 oc create -f deploy/crds/restaurant_v1alpha1_restaurant_crd.yaml
 operator-sdk up local --namespace=default
 ```
 
 Create all the necessary resources
 
-```{bash}
+```
 $ oc create -f deploy
 deployment.apps/restaurant-operator created
 role.rbac.authorization.k8s.io/restaurant-operator created
@@ -145,42 +144,11 @@ Deploy the CR and check if the busybox pod is created by the operator
 
 ```
 oc create -f deploy/crds/restaurant.workshop.redhat.com_v1alpha1_restaurant_cr.yaml                                       
-
 oc get pods
 ```
 
-## Advanced topics
-
-* [Testing](Testing.md)
-* [OLM integration](OLM.md)
-
-## Useful commands
-
-* To show which Kind belongs to which apiGroup.
-
-```{bash}
-$ oc api-resources
-NAME                              SHORTNAMES   APIGROUP                         NAMESPACED   KIND
-...
-configmaps                        cm                                            true         ConfigMap
-pods                              po                                            true         Pod
-podtemplates                                                                    true         PodTemplate
-deployments                       deploy       apps                             true         Deployment
-ingresses                         ing          extensions                       true         Ingress
-roles                                          rbac.authorization.k8s.io        true         Role
-restaurants                                    restaurant.workshop.redhat.com   true         Restaurant
+### Cleanup
 ```
-
-* To show all the Api Versions
-
-```{bash}
-$ oc api-versions
-...
-apps/v1
-...
-rbac.authorization.k8s.io/v1
-rbac.authorization.k8s.io/v1beta1
-restaurant.workshop.redhat.com/v1alpha1
-...
-v1
+oc delete -f deploy
+oc delete -f deploy/cr
 ```
