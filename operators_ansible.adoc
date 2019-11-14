@@ -227,26 +227,15 @@ Ensure that the operator creates the deployment for the CR:
 $ oc get deployment
 ```
 
-Check the pods to confirm 3 replicas were created:
-
-```sh
-$ kubectl get pods
-NAME                                  READY     STATUS    RESTARTS   AGE
-example-memcached-6fd7c98d8-7dqdr     1/1       Running   0          1m
-example-memcached-6fd7c98d8-g5k7v     1/1       Running   0          1m
-example-memcached-6fd7c98d8-m7vn7     1/1       Running   0          1m
-memcached-operator-7cc7cfdf86-vvjqk   2/2       Running   0          2m
-```
-
 ### View the Ansible logs
 
-The `memcached-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
+The `hotel-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
 The `ansible` container exists only to expose the standard Ansible stdout logs that most Ansible
 users will be familiar with. In order to see the logs from a particular container, you can run
 
 ```sh
-kubectl logs deployment/memcached-operator -c ansible
-kubectl logs deployment/memcached-operator -c operator
+oc logs deployment/hotel-operator -c ansible
+oc logs deployment/hotel-operator -c operator
 ```
 
 The `ansible` logs contain all of the information about the Ansible run and will make it much easier to debug issues within your Ansible tasks,
@@ -270,23 +259,13 @@ Change the `spec.size` field in the memcached CR from 3 to 4 and apply the
 change:
 
 ```sh
-$ cat deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
-apiVersion: "cache.example.com/v1alpha1"
-kind: "Memcached"
-metadata:
-  name: "example-memcached"
-spec:
-  size: 4
-
-$ kubectl apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+$ oc patch hotel example-hotel --patch '{"spec": {"size": 2 }}'
 ```
 
 Confirm that the operator changes the deployment size:
 
 ```sh
-$ kubectl get deployment
-NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-example-memcached    4         4         4            4           5m
+$ oc get deployment
 ```
 
 ### Cleanup
@@ -294,17 +273,6 @@ example-memcached    4         4         4            4           5m
 Clean up the resources:
 
 ```sh
-$ kubectl delete -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
-$ kubectl delete -f deploy/operator.yaml
-$ kubectl delete -f deploy/role_binding.yaml
-$ kubectl delete -f deploy/role.yaml
-$ kubectl delete -f deploy/service_account.yaml
-$ kubectl delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+$ oc delete -f deploy/crds
+$ oc delete -f deploy
 ```
-
-
-operator-sdk build quay.io/openshift-examples/ansible-example-operator:latest
-docker push quay.io/openshift-examples/ansible-example-operator:latest
-
-sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/openshift-examples/ansible-example-operator:latest|g' deploy/operator.yaml
-sed -i "" 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml

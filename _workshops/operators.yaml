@@ -6,6 +6,6 @@ content:
 
 modules:
   activate:
-  - operators_0_quay
-  - operators_1_go
-  - operators_2_ansible
+  - operators_quay
+  - operators_go
+  - operators_ansible

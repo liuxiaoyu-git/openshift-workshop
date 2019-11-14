@@ -4,9 +4,9 @@ config:
 modules:
   kafka:
     name: Install a Kafka cluster
-  operators_0_quay:
+  operators_quay:
     name: Configure Quay
-  operators_1_go:
+  operators_go:
     name: Deploy a Go Operator
-  operators_2_ansible:
+  operators_ansible:
     name: Deploy an Ansible Operator
