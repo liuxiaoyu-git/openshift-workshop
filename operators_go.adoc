@@ -14,7 +14,7 @@
 
 Note: You can chose between using dep or modules. Modules are used by default. In next versions it will also be added support by default for external vendoring (i.e. `--vendor=false`).
 
-```{bash}
+```
 mkdir projects && cd projects
 operator-sdk new restaurant-operator --repo --repo=github.com/radudd/restaurant-operator
 cd restaurant-operator
@@ -31,7 +31,7 @@ Check the [project scaffolding layout](https://github.com/operator-framework/ope
 
 ### Let's add a new CRD
 
-```{bash}
+```
 cd restaurant-operator
 operator-sdk add api --api-version=restaurant.workshop.redhat.com/v1alpha1 --kind=Restaurant
 ```
