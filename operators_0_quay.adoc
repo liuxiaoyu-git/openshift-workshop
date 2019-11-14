@@ -1,0 +1,19 @@
+### Preparing Quay repository and account
+
+For this lab, we'll use the internal Quay registry. Quay is configured to use Red Hat SSO for authentication.
+
+Open https://{IMAGE_REGISTRY} in a browser and login using Red Hat SSO and GitHub IDP.
+
+Then create two new repositories, called _gooperator_ and _ansibleoperator_ and make them public.
+
+Now it's time to crete a Robot Account. Go to _Account settings_ (top right) and click on _Robot accounts_ from the left panel. Create a new account, called _generic_
+
+For each of the repos created before, click on _Settings/_User and Robot Permissions_ from the left panel, select the newly created Robot Account and provide to it write permissions. 
+
+Finally, go again to _Account settings/Robot Accounts_. Click on the wheel from the end of the line corresponding to your account and _View Credentials_
+
+Use this command to login to Quay.
+
+```
+docker login -u="radudd+generic" -p="xxxxxx" {IMAGE_REGISTRY}
+```

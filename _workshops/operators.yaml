@@ -1,0 +1,11 @@
+id: "operators-workshop"
+name: "Deploying your first operators using Ansible and Go"
+
+content:
+  url: https://raw.githubusercontent.com/radudd/workshopper-template/master
+
+modules:
+  activate:
+  - operators_0_quay
+  - operators_1_go
+  - operators_2_ansible

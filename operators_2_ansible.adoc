@@ -1,0 +1,310 @@
+### Create your first Ansible operator
+
+#### Requirements
+
+* Git
+* operator-sdk 
+* docker version 17.03+ or buildah version 1.8.2+
+* kubectl or oc (for OpenShift)
+* Access to a Kubernetes or an OpenShift cluster
+* Quay account
+* ansible
+
+#### Skafolding 
+
+```
+mkdir projects && cd projects
+operator-sdk new hotel-operator \
+    --api-version=ansible-operator.openshift.pub/v1  \
+    --kind=Hotel \
+    --type=ansible
+cd ansible-operator
+```
+
+
+#### Watches file
+
+The Watches file contains a list of mappings from custom resources, identified
+by it's Group, Version, and Kind, to an Ansible Role or Playbook. The Operator
+expects this mapping file in a predefined location: `/opt/ansible/watches.yaml`
+
+* **group**:  The group of the Custom Resource that you will be watching.
+* **version**:  The version of the Custom Resource that you will be watching.
+* **kind**:  The kind of the Custom Resource that you will be watching.
+* **role** (default):  This is the path to the role that you have added to the
+  container.  For example if your roles directory is at `/opt/ansible/roles/`
+  and your role is named `busybox`, this value will be
+  `/opt/ansible/roles/busybox`. This field is mutually exclusive with the
+  "playbook" field.
+* **playbook**:  This is the path to the playbook that you have added to the
+  container. This playbook is expected to be simply a way to call roles. This
+  field is mutually exclusive with the "role" field.
+* **vars**: This is an arbitrary map of key-value pairs. The contents will be
+  passed as `extra_vars` to the playbook or role specified for this watch.
+* **reconcilePeriod** (optional): The reconciliation interval, how often the
+  role/playbook is run, for a given CR.
+* **manageStatus** (optional): When true (default), the operator will manage
+  the status of the CR generically. Set to false, the status of the CR is
+  managed elsewhere, by the specified role/playbook or in a separate controller.
+
+An example Watches file:
+
+```yaml
+---
+# Simple example mapping Foo to the Foo role
+- version: v1alpha1
+  group: foo.example.com
+  kind: Foo
+  role: /opt/ansible/roles/Foo
+
+# Simple example mapping Bar to a playbook
+- version: v1alpha1
+  group: bar.example.com
+  kind: Bar
+  playbook: /opt/ansible/playbook.yml
+
+# More complex example for our Baz kind
+# Here we will disable requeuing and be managing the CR status in the playbook,
+# and specify additional variables.
+- version: v1alpha1
+  group: baz.example.com
+  kind: Baz
+  playbook: /opt/ansible/baz.yml
+  reconcilePeriod: 0
+  manageStatus: false
+  vars:
+    foo: bar
+```
+
+#### Customize the operator logic
+
+For this example the ansible-operator will execute the following
+reconciliation logic for each `Hotel` Custom Resource (CR):
+- Create a hotel Deployment if it doesn't exist
+- Ensure that the Deployment size is the same as specified by the `Hotel` CR
+
+#### Watch the Memcached CR
+
+By default, the hotel-operator watches `Hotel` resource events as shown in `watches.yaml` and executes Ansible Role `Hotel`:
+
+```yaml
+---
+- version: v1
+  group: ansible-operator.openshift.pub
+  kind: Hotel
+  role: /opt/ansible/roles/hotel
+```
+
+### Define the Hotel spec
+
+Defining the spec for an Ansible Operator can be done entirely in Ansible. The
+Ansible Operator will simply pass all key value pairs listed in the Custom
+Resource spec field along to Ansible as extra
+[variables](https://docs.ansible.com/ansible/2.5/user_guide/playbooks_variables.html#passing-variables-on-the-command-line).
+The names of all variables in the spec field are converted to snake_case
+by the operator before running ansible. For example, `serviceAccount` in
+the spec becomes `service_account` in ansible.
+It is recommended that you perform some type validation in Ansible on the
+variables to ensure that your application is receiving expected input.
+
+First, set a default in case the user doesn't set the `spec` field by modifying
+`roles/hotel/defaults/main.yml`:
+```yaml
+size: 1
+```
+
+### Defining the Hotel deployment
+
+Now that we have the spec defined, we can define what Ansible is actually
+executed on resource changes. Since this is an Ansible Role, the default
+behavior will be to execute the tasks in `roles/hotel/tasks/main.yml`. We
+want Ansible to create a deployment if it does not exist which runs the
+`nginx:latest` image. Ansible 2.5+ supports the [k8s Ansible
+Module](https://docs.ansible.com/ansible/2.6/modules/k8s_module.html) which we
+will leverage to control the deployment definition.
+
+Modify `roles/hotel/tasks/main.yml` to look like the following:
+```yaml
+---
+- name: hotel
+  k8s:
+    definition:
+      kind: Deployment
+      apiVersion: apps/v1
+      metadata:
+        name: '{{ meta.name }}-hotel'
+        namespace: '{{ meta.namespace }}'
+      spec:
+        replicas: "{{size}}"
+        selector:
+          matchLabels:
+            app: hotel
+        template:
+          metadata:
+            labels:
+              app: hotel
+          spec:
+            containers:
+            - name: hotel
+              image: "nginx"
+
+```
+
+It is important to note that we used the `size` variable to control how many
+replicas of the Memcached deployment we want. We set the default to `1`, but
+any user can create a Custom Resource that overwrites the default.
+
+### Build and run the operator
+
+Before running the operator, Kubernetes needs to know about the new custom
+resource definition the operator will be watching.
+
+Deploy the CRD:
+
+```sh
+$ oc create -f deploy/crds/ansible-operator.openshift.pub_hotels_crd.yaml
+```
+
+Once this is done, there are two ways to run the operator:
+
+- As a pod inside a Kubernetes cluster
+- As a go program outside the cluster using `operator-sdk`
+
+#### 1. Run as a pod inside a Kubernetes cluster
+
+Running as a pod inside a Kubernetes cluster is preferred for production use.
+
+Build the hotel-operator image and push it to a registry:
+```
+$ operator-sdk build {IMAGE_REGISTRY}/{username}/ansibleoperator:latest
+$ docker push {IMAGE_REGISTRY}/{username}/ansibleoperator:latest
+```
+
+Kubernetes deployment manifests are generated in `deploy/operator.yaml`. The
+deployment image in this file needs to be modified from the placeholder
+`REPLACE_IMAGE` to the previous built image. To do this run:
+```
+$ sed -i 's|{{ REPLACE_IMAGE }}|{IMAGE_REGISTRY}/{username}/ansibleoperator:latest|g' deploy/operator.yaml
+```
+
+The `imagePullPolicy` also requires an update.  To do this run:
+```
+$ sed -i 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml
+```
+
+Deploy the hotel-operator:
+```sh
+$ oc create -f deploy
+```
+
+Verify that the hotel-operator is up and running:
+
+```sh
+$ oc get deployment
+```
+
+#### Create a Memcached CR
+
+Modify `deploy/crds/ansible-operator.openshift.pub_v1_hotel_cr.yaml` as shown and create a `Hotel` custom resource:
+
+```sh
+$ cat deploy/crds/ansible-operator.openshift.pub_v1_hotel_cr.yaml
+apiVersion: "cache.example.com/v1alpha1"
+apiVersion: ansible-operator.openshift.pub/v1
+kind: Hotel
+metadata:
+  name: example-hotel
+spec:
+  # Add fields here
+  size: 3
+
+$ oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hotel_cr.yaml
+```
+
+Ensure that the operator creates the deployment for the CR:
+
+```sh
+$ oc get deployment
+```
+
+Check the pods to confirm 3 replicas were created:
+
+```sh
+$ kubectl get pods
+NAME                                  READY     STATUS    RESTARTS   AGE
+example-memcached-6fd7c98d8-7dqdr     1/1       Running   0          1m
+example-memcached-6fd7c98d8-g5k7v     1/1       Running   0          1m
+example-memcached-6fd7c98d8-m7vn7     1/1       Running   0          1m
+memcached-operator-7cc7cfdf86-vvjqk   2/2       Running   0          2m
+```
+
+### View the Ansible logs
+
+The `memcached-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
+The `ansible` container exists only to expose the standard Ansible stdout logs that most Ansible
+users will be familiar with. In order to see the logs from a particular container, you can run
+
+```sh
+kubectl logs deployment/memcached-operator -c ansible
+kubectl logs deployment/memcached-operator -c operator
+```
+
+The `ansible` logs contain all of the information about the Ansible run and will make it much easier to debug issues within your Ansible tasks,
+whereas the `operator` logs will contain much more detailed information about the Ansible Operator's internals and interface with Kubernetes.
+
+### Additional Ansible debug
+
+Occasionally while developing additional debug in the Operator logs is nice to have. To enable Ansible debug output, ie `-vvvv`.
+Add the following to the `operator.yaml` manifest.
+
+```yaml
+          env:
+           ...
+           - name: ANSIBLE_VERBOSITY
+             value: "4"
+```
+
+### Update the size
+
+Change the `spec.size` field in the memcached CR from 3 to 4 and apply the
+change:
+
+```sh
+$ cat deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+apiVersion: "cache.example.com/v1alpha1"
+kind: "Memcached"
+metadata:
+  name: "example-memcached"
+spec:
+  size: 4
+
+$ kubectl apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+```
+
+Confirm that the operator changes the deployment size:
+
+```sh
+$ kubectl get deployment
+NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+example-memcached    4         4         4            4           5m
+```
+
+### Cleanup
+
+Clean up the resources:
+
+```sh
+$ kubectl delete -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+$ kubectl delete -f deploy/operator.yaml
+$ kubectl delete -f deploy/role_binding.yaml
+$ kubectl delete -f deploy/role.yaml
+$ kubectl delete -f deploy/service_account.yaml
+$ kubectl delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+```
+
+
+operator-sdk build quay.io/openshift-examples/ansible-example-operator:latest
+docker push quay.io/openshift-examples/ansible-example-operator:latest
+
+sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/openshift-examples/ansible-example-operator:latest|g' deploy/operator.yaml
+sed -i "" 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml
