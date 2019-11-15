@@ -1,6 +1,6 @@
-## Create your first Go operator
+### Create your first Go operator
 
-### Requirements
+#### Requirements
 
 * Git
 * Go version 1.12.x
@@ -10,14 +10,14 @@
 * Access to a Kubernetes or an OpenShift cluster
 * Quay account
 
-### Skaffolding project
+#### Skaffolding project
 
 Note: You can chose between using dep or modules. Modules are used by default. In next versions it will also be added support by default for external vendoring (i.e. `--vendor=false`).
 
 ```
 mkdir projects && cd projects
-operator-sdk new restaurant-operator --repo --repo=github.com/radudd/restaurant-operator
-cd restaurant-operator
+operator-sdk new hellogo-operator --repo --repo=github.com/radudd/hellogo-operator
+cd hellogo-operator
 ```
 
 After that review the generated code and resources. Pay special attention to the following:
@@ -29,11 +29,11 @@ After that review the generated code and resources. Pay special attention to the
 
 Check the [project scaffolding layout](https://github.com/operator-framework/operator-sdk/blob/master/doc/project_layout.md) for more details
 
-### Let's add a new CRD
+#### Let's add a new CRD
 
 ```
-cd restaurant-operator
-operator-sdk add api --api-version=restaurant.workshop.redhat.com/v1alpha1 --kind=Restaurant
+cd hellogo-operator
+operator-sdk add api --api-version=hellogo.workshop.redhat.com/v1alpha1 --kind=HelloGo
 ```
 
 After that we can see the following changed:
@@ -41,22 +41,22 @@ After that we can see the following changed:
 * deploy/crds is created with a basic CRD (including OpenApiV3Schema validation) and a sample CR
 * pkg/apis now has a folder containing a file `<my_kind>_types.go` with the CRD struct
 
-### Create the controller for our CRD
+#### Create the controller for our CRD
 
 ```
-operator-sdk add controller --api-version=restaurant.workshop.redhat.com/v1alpha1 --kind=Restaurant
+operator-sdk add controller --api-version=hellogo.workshop.redhat.com/v1alpha1 --kind=HelloGo
 ```
 
 Let's review:
 
 * `pkg/controller/<my_kind>/<my_kind>_controller.go` has a default implementation that creates a `busybox` pod
 
-### Define the CRD
+#### Define the CRD
 
 Go to the `pkg/apis/<my_kind>/<my_kind>_types.go` file and define your custom resource.
 
 ```
-type RestaurantSpec struct {
+type HelloGoSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -83,17 +83,17 @@ Verify that your custom resource definition has a generated.
 
 Note: Run this command only when you want to replace the CRD with the new generated values. **This will overwrite any customization**
 
-### Implement the controller
+#### Implement the controller
 
 1. Watch for changes in owned objects: Just add here the ones you feel necessary.
 1. Implement the reconcile loop: You will receive notification changes for all the watched objects (CustomResources and OwnedObjects). Create the owned objects that are missing or replace them if the expected objects don't match with the existing ones.
 1. Update the `role.yaml` in case different permissions are required (e.g. create `ingress` or `route`)
 
-### Run the Operator locally
+#### Run the Operator locally
 
 ```
 oc project go-operator-tutorial
-oc create -f deploy/crds/restaurant_v1alpha1_restaurant_crd.yaml
+oc create -f deploy/crds/hellogo_v1alpha1_hellogo_crd.yaml
 go mod vendor
 operator-sdk up local --namespace=go-operator-tutorial
 ```
@@ -104,7 +104,7 @@ Now you can create an example CR. Notice that the generated CR is not valid.
 
 
 ```
-operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
+operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/{username}/gooperators/hellogo-operator:latest
 ...
 INFO[0008] Operator build complete.
 ```
@@ -112,7 +112,7 @@ INFO[0008] Operator build complete.
 Push the image to your quay.io repository (make sure the repository is public for this workshop)
 
 ```
-docker push {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
+docker push {{IMAGE_REGISTRY}}/{username}/gooperators/hellogo-operator:latest
 ```
 
 ### Deploy the Operator in your Kubernetes cluster
@@ -120,13 +120,13 @@ docker push {{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest
 Before deploying the Operator make sure you replaced all the placeholders:
 
 ```
-sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/{username}/gooperators/restaurant-operator:latest|g' deploy/operator.yaml
+sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/{username}/gooperators/hellogo-operator:latest|g' deploy/operator.yaml
 ```
 
 Create the CRD (if you haven't done it yet)
 
 ```
-oc create -f deploy/crds/restaurant_v1alpha1_restaurant_crd.yaml
+oc create -f deploy/crds/hellogo_v1alpha1_hellogo_crd.yaml
 operator-sdk up local --namespace=default
 ```
 
@@ -134,20 +134,20 @@ Create all the necessary resources
 
 ```
 $ oc create -f deploy
-deployment.apps/restaurant-operator created
-role.rbac.authorization.k8s.io/restaurant-operator created
-rolebinding.rbac.authorization.k8s.io/restaurant-operator created
-serviceaccount/restaurant-operator created
+deployment.apps/hellogo-operator created
+role.rbac.authorization.k8s.io/hellogo-operator created
+rolebinding.rbac.authorization.k8s.io/hellogo-operator created
+serviceaccount/hellogo-operator created
 ```
 
-Deploy the CR and check if the busybox pod is created by the operator
+Deploy the CR and check if the hello pod is created by the operator
 
 ```
-oc create -f deploy/crds/restaurant.workshop.redhat.com_v1alpha1_restaurant_cr.yaml                                       
+oc create -f deploy/crds/hellogo.workshop.redhat.com_v1alpha1_hellogo_cr.yaml                                       
 oc get pods
 ```
 
-### Cleanup
+#### Cleanup
 ```
 oc delete -f deploy
 oc delete -f deploy/cr

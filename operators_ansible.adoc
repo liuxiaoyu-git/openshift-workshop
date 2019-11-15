@@ -14,9 +14,9 @@
 
 ```
 mkdir projects && cd projects
-operator-sdk new hotel-operator \
+operator-sdk new hello-operator \
     --api-version=ansible-operator.openshift.pub/v1  \
-    --kind=Hotel \
+    --kind=Hello \
     --type=ansible
 cd ansible-operator
 ```
@@ -79,23 +79,23 @@ An example Watches file:
 #### Customize the operator logic
 
 For this example the ansible-operator will execute the following
-reconciliation logic for each `Hotel` Custom Resource (CR):
-- Create a hotel Deployment if it doesn't exist
-- Ensure that the Deployment size is the same as specified by the `Hotel` CR
+reconciliation logic for each `Hello` Custom Resource (CR):
+- Create a hello Deployment if it doesn't exist
+- Ensure that the Deployment size is the same as specified by the `Hello` CR
 
 #### Watch the Memcached CR
 
-By default, the hotel-operator watches `Hotel` resource events as shown in `watches.yaml` and executes Ansible Role `Hotel`:
+By default, the hello-operator watches `Hello` resource events as shown in `watches.yaml` and executes Ansible Role `Hello`:
 
 ```yaml
 ---
 - version: v1
   group: ansible-operator.openshift.pub
-  kind: Hotel
-  role: /opt/ansible/roles/hotel
+  kind: Hello
+  role: /opt/ansible/roles/hello
 ```
 
-### Define the Hotel spec
+### Define the Hello spec
 
 Defining the spec for an Ansible Operator can be done entirely in Ansible. The
 Ansible Operator will simply pass all key value pairs listed in the Custom
@@ -108,45 +108,45 @@ It is recommended that you perform some type validation in Ansible on the
 variables to ensure that your application is receiving expected input.
 
 First, set a default in case the user doesn't set the `spec` field by modifying
-`roles/hotel/defaults/main.yml`:
+`roles/hello/defaults/main.yml`:
 ```yaml
 size: 1
 ```
 
-### Defining the Hotel deployment
+### Defining the Hello deployment
 
 Now that we have the spec defined, we can define what Ansible is actually
 executed on resource changes. Since this is an Ansible Role, the default
-behavior will be to execute the tasks in `roles/hotel/tasks/main.yml`. We
+behavior will be to execute the tasks in `roles/hello/tasks/main.yml`. We
 want Ansible to create a deployment if it does not exist which runs the
-`nginx:latest` image. Ansible 2.5+ supports the [k8s Ansible
+`openshift/hello-openshift` image. Ansible 2.5+ supports the [k8s Ansible
 Module](https://docs.ansible.com/ansible/2.6/modules/k8s_module.html) which we
 will leverage to control the deployment definition.
 
-Modify `roles/hotel/tasks/main.yml` to look like the following:
+Modify `roles/hello/tasks/main.yml` to look like the following:
 ```yaml
 ---
-- name: hotel
+- name: hello
   k8s:
     definition:
       kind: Deployment
       apiVersion: apps/v1
       metadata:
-        name: '{{ meta.name }}-hotel'
+        name: '{{ meta.name }}-hello'
         namespace: '{{ meta.namespace }}'
       spec:
         replicas: "{{size}}"
         selector:
           matchLabels:
-            app: hotel
+            app: hello
         template:
           metadata:
             labels:
-              app: hotel
+              app: hello
           spec:
             containers:
-            - name: hotel
-              image: "nginx"
+            - name: hello
+              image: "openshift/hello-openshift"
 
 ```
 
@@ -162,7 +162,7 @@ resource definition the operator will be watching.
 Deploy the CRD:
 
 ```sh
-$ oc create -f deploy/crds/ansible-operator.openshift.pub_hotels_crd.yaml
+$ oc create -f deploy/crds/ansible-operator.openshift.pub_hellos_crd.yaml
 ```
 
 Once this is done, there are two ways to run the operator:
@@ -174,7 +174,7 @@ Once this is done, there are two ways to run the operator:
 
 Running as a pod inside a Kubernetes cluster is preferred for production use.
 
-Build the hotel-operator image and push it to a registry:
+Build the hello-operator image and push it to a registry:
 ```
 $ operator-sdk build {{IMAGE_REGISTRY}}/{username}/ansibleoperator:latest
 $ docker push {{IMAGE_REGISTRY}}/{username}/ansibleoperator:latest
@@ -192,12 +192,12 @@ The `imagePullPolicy` also requires an update.  To do this run:
 $ sed -i 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml
 ```
 
-Deploy the hotel-operator:
+Deploy the hello-operator:
 ```sh
 $ oc create -f deploy
 ```
 
-Verify that the hotel-operator is up and running:
+Verify that the hello-operator is up and running:
 
 ```sh
 $ oc get deployment
@@ -205,20 +205,20 @@ $ oc get deployment
 
 #### Create a Memcached CR
 
-Modify `deploy/crds/ansible-operator.openshift.pub_v1_hotel_cr.yaml` as shown and create a `Hotel` custom resource:
+Modify `deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml` as shown and create a `Hello` custom resource:
 
 ```sh
-$ cat deploy/crds/ansible-operator.openshift.pub_v1_hotel_cr.yaml
+$ cat deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
 apiVersion: "cache.example.com/v1alpha1"
 apiVersion: ansible-operator.openshift.pub/v1
-kind: Hotel
+kind: Hello
 metadata:
-  name: example-hotel
+  name: example-hello
 spec:
   # Add fields here
   size: 3
 
-$ oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hotel_cr.yaml
+$ oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
 ```
 
 Ensure that the operator creates the deployment for the CR:
@@ -229,13 +229,13 @@ $ oc get deployment
 
 ### View the Ansible logs
 
-The `hotel-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
+The `hello-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
 The `ansible` container exists only to expose the standard Ansible stdout logs that most Ansible
 users will be familiar with. In order to see the logs from a particular container, you can run
 
 ```sh
-oc logs deployment/hotel-operator -c ansible
-oc logs deployment/hotel-operator -c operator
+oc logs deployment/hello-operator -c ansible
+oc logs deployment/hello-operator -c operator
 ```
 
 The `ansible` logs contain all of the information about the Ansible run and will make it much easier to debug issues within your Ansible tasks,
@@ -259,7 +259,7 @@ Change the `spec.size` field in the memcached CR from 3 to 4 and apply the
 change:
 
 ```sh
-$ oc patch hotel example-hotel --patch '{"spec": {"size": 2 }}'
+$ oc patch hello example-hello --patch '{"spec": {"size": 2 }}'
 ```
 
 Confirm that the operator changes the deployment size:
