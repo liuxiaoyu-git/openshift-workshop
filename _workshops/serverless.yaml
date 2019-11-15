@@ -1,0 +1,12 @@
+id: "serverless-workshop"
+name: "Using Serverless workloads"
+
+content:
+  url: https://raw.githubusercontent.com/radudd/workshopper-template/master
+
+modules:
+  activate:
+  - serverless_intro
+  - serverless_checks
+  - serverless_first_app
+  - serverless_revs_tags

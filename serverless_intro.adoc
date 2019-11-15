@@ -1,0 +1,55 @@
+### About
+
+OpenShift Serverless is based on the open source Knative project, which provides portability and consistency across hybrid and multi-cloud environments by enabling an enterprise-grade serverless platform. It implements the building blocks for developers to create modern, source-centric, container-based applications through a series of Custom Resource Definitions (CRDs) and associated controllers in Kubernetes.
+
+OpenShift Serverless applications can be integrated with other OpenShift Container Platform services, such as Service Mesh and cluster monitoring, delivering a complete serverless application development and deployment experience.
+
+### Knative Serving
+Knative Serving on OpenShift Container Platform builds on Kubernetes and Istio to support deploying and serving serverless applications.
+
+It creates a set of Kubernetes Custom Resource Definitions (CRDs) that are used to define and control the behavior of serverless workloads on an OpenShift Container Platform cluster.
+
+#### Knative Serving components
+The components described in this section are the resources that Knative Serving requires to be configured and run correctly.
+
+Knative service resource
+The service.serving.knative.dev resource automatically manages the whole lifecycle of a serverless workload on a cluster. It controls the creation of other objects to ensure that an app has a route, a configuration, and a new revision for each update of the service. Services can be defined to always route traffic to the latest revision or to a pinned revision.
+
+Knative route resource
+The route.serving.knative.dev resource maps a network endpoint to one or more Knative revisions. You can manage the traffic in several ways, including fractional traffic and named routes.
+
+Knative configuration resource
+The configuration.serving.knative.dev resource maintains the required state for your deployment. Modifying a configuration creates a new revision.
+
+Knative revision resource
+The revision.serving.knative.dev resource is a point-in-time snapshot of the code and configuration for each modification made to the workload. Revisions are immutable objects and can be retained for as long as needed. Cluster administrators can modify the revision.serving.knative.dev resource to enable automatic scaling of Pods in your OpenShift Container Platform cluster.
+
+### Knative client
+
+The Knative Client (kn) extends the functionality of the oc or kubectl tools to enable interaction with Knative components on OpenShift Container Platform. kn allows developers to deploy and manage applications without editing YAML files directly.
+For a better experience, please install Knative client for this lab.
+If not already, the client can be downloaded from https://mirror.openshift.com/pub/openshift-v4/clients/serverless/latest
+
+### ServiceMesh
+Service Mesh is required for the installation of OpenShift Serverless. 
+
+Red Hat OpenShift Service Mesh provides a platform for behavioral insight and operational control over your networked microservices in a service mesh. With Red Hat OpenShift Service Mesh, you can connect, secure, and monitor microservices in your OpenShift Container Platform environment
+
+Red Hat OpenShift Service Mesh is logically split into a data plane and a control plane:
+
+The data plane is a set of intelligent proxies deployed as sidecars. These proxies intercept and control all inbound and outbound network communication between microservices in the service mesh. Sidecar proxies also communicate with Mixer, the general-purpose policy and telemetry hub.
+
+* Envoy proxy intercepts all inbound and outbound traffic for all services in the service mesh. Envoy is deployed as a sidecar to the relevant service in the same pod.
+
+The control plane manages and configures proxies to route traffic, and configures Mixers to enforce policies and collect telemetry.
+
+* Mixer enforces access control and usage policies (such as authorization, rate limits, quotas, authentication, and request tracing) and collects telemetry data from the Envoy proxy and other services.
+
+* Pilot configures the proxies at runtime. Pilot provides service discovery for the Envoy sidecars, traffic management capabilities for intelligent routing (for example, A/B tests or canary deployments), and resiliency (timeouts, retries, and circuit breakers).
+
+* Citadel issues and rotates certificates. Citadel provides strong service-to-service and end-user authentication with built-in identity and credential management. You can use Citadel to upgrade unencrypted traffic in the service mesh. Operators can enforce policies based on service identity rather than on network controls using Citadel.
+
+* Galley ingests the service mesh configuration, then validates, processes, and distributes the configuration. Galley protects the other service mesh components from obtaining user configuration details from OpenShift Container Platform.
+
+Red Hat OpenShift Service Mesh also uses the istio-operator to manage the installation of the control plane. An Operator is a piece of software that enables you to implement and automate common activities in your OpenShift cluster. It acts as a controller, allowing you to set or change the desired state of objects in your cluster.
+

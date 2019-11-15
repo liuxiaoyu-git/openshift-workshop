@@ -1,0 +1,63 @@
+### Revisions
+
+First let's list the Knative services deployed
+
+```
+kn service list
+```
+
+Then, let's update the service deployed earlier.
+
+```
+kn service update hello --env TARGET=Kn
+```
+
+Now do a GET request to the service. You will notice it got updated
+
+```
+curl http://hello.test-knative.apps.pro1.mattiamascia.com
+```
+
+Each time a service gets updated, a new revision of is created with a new URL. That basically coincides with a creating a new Service and a new Deployment.
+
+```
+oc get svc
+oc get deploy
+```
+
+Check also the current revisions
+
+```
+kn revision list
+
+NAME            SERVICE   GENERATION   AGE     CONDITIONS   READY   REASON
+hello-jlthg-2   hello     2            3m10s   3 OK / 4     True
+hello-chjnf-1   hello     1            36m     3 OK / 4     True
+```
+
+
+### Traffic
+
+Knative service allows for traffic mapping, which is the mapping of revisions of the service to an allocated portion of traffic. It offers the option to create unique URLs for particular revisions and has the ability to assign traffic to the latest revision.
+
+With every update to the configuration of the service, a new revision is created with the service route pointing all the traffic to the latest ready revision by default.
+
+You can change this behavior by defining which revision gets a portion of the traffic.
+
+Now, let's route 10% of traffic to your new revision before putting all traffic on
+
+```
+kn service update hello --traffic @latest=10 --traffic hello-jlthg-2=90
+```
+
+Performing a GET request, you'll notice the service is pointing to the old revision.
+
+```
+curl  http://hello.test-knative.apps.pro1.mattiamascia.com
+```
+
+Add
+
+* monitoring
+* scale-out
+* tagging

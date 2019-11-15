@@ -1,0 +1,92 @@
+### Deploy helloWorld service
+
+Now the fun begins. Let's create our first Serverless Service. Please make sure to be in the namespace assigned to your user - {{ NAMESPACE }}. We will deploy a hello-world service.
+
+```
+oc project {{ NAMESPACE }}
+
+cat <<EOF > service.yaml
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: helloworld-go
+  namespace: {{ NAMESPACE }}
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/knative-samples/helloworld-go
+          env:
+            - name: TARGET
+              value: "Go Sample v1"
+EOF
+
+oc create -f service.yaml
+```
+
+Besides some internal components for ServiceMesh and Serverless, this will deploy a Kubernetes Service and a Deployment. You can check this with the following commands.
+
+```
+oc get deploy
+oc get svc
+```
+
+Now let's go to the OpenShift Console and check there the deployed serverless components
+
+image::serverless-1.jpg[]
+
+You'll notice that a Service, a Revision and Route have been created.
+
+As mentioned in the intro section, for a better experience using serverless workloads, Knative CLI would be required. For the rest of the lab, we will continue using the client.
+
+For deploying the same service using kn client, use the following command:
+
+```
+╰─➤  kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ                                                                   130 ↵
+Service 'hellos' successfully created in namespace 'test-knative'.
+Waiting for service 'hello' to become ready ... OK
+
+Service URL:
+http://hello.test-knative.apps.pro1.mattiamascia.com
+```
+
+Check the URL
+
+```
+curl http://hello.test-knative.apps.pro1.mattiamascia.com
+```
+
+And then the pods
+```
+oc get pods
+```
+
+Now let's check the Developer Console in OpenShift https://{{ OPENSHIFT_CONSOLE_URL }}/topology
+
+image::serverless-2.jpg[]
+
+You'll notice that the Deployment autoscales(or already autoscaled) to 0 pods because no traffic was sent in the last 90 seconds.
+
+Details about scaling to zero: Knative uses the config-autoscaler config map in the knative-serving namespace to determine the amount of time to wait before a stable Knative service is considered idle and can be scaled down to zero instances. This time is also referred to as the scale-to-zero-grace-period. By default, the grace period is set to 30 seconds. However, before Knative starts counting down the seconds, the service must be considered stable for 60 seconds (stable-window). For example, if requests are stopped to your app, your Knative service instance is still up for the next 90 seconds (60s stable window + 30s scale-to-zero-grace-period) before Knative scales down your service to zero instances.
+
+The values can be updated in the `config-autoscaler` ConfigMap. Check its content, it includes also some explanations
+
+`oc get configmap config-autoscaler -n knative-serving -o yaml`
+
+
+Now fire another request to the service 
+
+```
+curl http://hello.test-knative.apps.pro1.mattiamascia.com
+```
+
+And switch to the Developer Console {{ OPENSHIFT_CONSOLE_URL }}/topology
+
+image::serverless-3.jpg[]
+
+As you can already imagine, the autoscaler scaled the deployment to 1 and answered to the request.
+
+### References:
+
+* https://docs.openshift.com/container-platform/4.2/serverless
+* https://cloud.ibm.com/docs/containers?topic=containers-serverless-apps-knative#knative-idle-time

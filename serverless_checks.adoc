@@ -1,0 +1,61 @@
+### About
+
+The cluster is already preinstalled with OpenShift Serverless and OpenShift ServiceMesh operators (which is required for Serverless) and the Custom Resources are already created.
+
+In the first part we will check the components of ServiceMesh and Serverless, then we will deploy an application using Serverless
+
+### Checks
+
+#### ServiceMesh
+
+The control plane needs to run in `istio-system` namespace. 
+
+Let's first check the custom resources. The first one is called ServiceMeshControlPlane and is used by service mesh to deploy the control plane. You can inspect with the following command:
+
+```
+oc describe servicemeshcontrolplane basic-install
+```
+
+The second resource required by Service Mesh is called ServiceMeshMemberRoll.
+You must have a Service Mesh Member Roll for the control plane namespace, if the Service Mesh is configured for multi-tenancy. For applications to use the deployed control plane and ingress, their namespaces must be part of a member roll.
+
+```
+oc describe ServiceMeshMemberRoll default
+```
+
+The namespaces where we'll test the serverless application needs to be part of members array!
+
+Let's now check the deployed pods of the Control Plane:
+
+```
+╰─➤  oc get pod -n istio-system
+NAME                                     READY   STATUS    RESTARTS   AGE
+cluster-local-gateway-6647b96c4d-f6fcx   1/1     Running   1          23h
+istio-citadel-79979464d-np24l            1/1     Running   1          23h
+istio-galley-6bb46858c5-9kt4x            1/1     Running   1          23h
+istio-ingressgateway-8465bbf788-qqpc8    1/1     Running   1          23h
+istio-pilot-59fc69bd66-pdtpw             1/1     Running   1          23h
+```
+
+#### Serverless
+
+As described in the intro section, the custom resource that Serverless Operator require in order to deploy its components for controlling the lifecycle of Serverless workloads is called KnativeServing.
+
+Let's take a look at its definition
+
+```
+oc get -o yaml knativeserving knative-serving -n knative-serving
+```
+
+And let's check its components
+```
+╰─➤  oc get servicemonitor -n knative-serving
+NAME         AGE
+activator    23h
+autoscaler   23h
+controller   23h
+```
+
+As you can see, its components are: activator, autoscaler and controller
+
+
