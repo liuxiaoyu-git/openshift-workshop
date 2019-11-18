@@ -1,11 +1,6 @@
 config:
     renderer: asciidoc
 
-vars:
-  - name: KNATIVE_NS
-    value: "<ASSIGNED_NS>"
-  - name: OCP_DOMAIN
-    value: apps.pro1.mattiamascia.com
 
 modules:
   kafka:

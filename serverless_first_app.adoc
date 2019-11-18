@@ -77,7 +77,7 @@ The values can be updated in the `config-autoscaler` ConfigMap. Check its conten
 Now fire another request to the service 
 
 ```
-curl http://hello.{KNATIVE_NS}.{{OCP_DOMAIN}}
+curl http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
 ```
 
 And switch to the Developer Console {{ OCP_CONSOLE_URL }}/topology
