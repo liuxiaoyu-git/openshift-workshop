@@ -1,11 +1,13 @@
 id: "operators-workshop"
 name: "Deploying your first operators using Ansible and Go"
 
+vars:
+  IMAGE_REGISTRY: quay.apps.ocp.bdmsky.net
+
 content:
   url: https://raw.githubusercontent.com/openlab-red/openshift-workshop
 
 modules:
   activate:
-  - operators_quay
   - operators_ansible
   - operators_go

@@ -8,9 +8,8 @@
 * kubectl or oc (for OpenShift)
 * Access to a Kubernetes or an OpenShift cluster
 * Quay account
-* ansible
 
-#### Skafolding 
+#### Skafolding project
 
 ```
 mkdir projects && cd projects
@@ -49,7 +48,7 @@ expects this mapping file in a predefined location: `/opt/ansible/watches.yaml`
 
 An example Watches file:
 
-```yaml
+```
 ---
 # Simple example mapping Foo to the Foo role
 - version: v1alpha1
@@ -87,7 +86,7 @@ reconciliation logic for each `Hello` Custom Resource (CR):
 
 By default, the hello-operator watches `Hello` resource events as shown in `watches.yaml` and executes Ansible Role `Hello`:
 
-```yaml
+```
 ---
 - version: v1
   group: ansible-operator.openshift.pub
@@ -109,7 +108,8 @@ variables to ensure that your application is receiving expected input.
 
 First, set a default in case the user doesn't set the `spec` field by modifying
 `roles/hello/defaults/main.yml`:
-```yaml
+
+```
 size: 1
 ```
 
@@ -124,7 +124,8 @@ Module](https://docs.ansible.com/ansible/2.6/modules/k8s_module.html) which we
 will leverage to control the deployment definition.
 
 Modify `roles/hello/tasks/main.yml` to look like the following:
-```yaml
+
+```
 ---
 - name: hello
   k8s:
@@ -156,35 +157,37 @@ any user can create a Custom Resource that overwrites the default.
 
 ### Build and run the operator
 
+First go to your own project.
+
+----
+oc project <myuser-namespace>
+----
+
 Before running the operator, Kubernetes needs to know about the new custom
 resource definition the operator will be watching.
 
 Deploy the CRD:
 
-```sh
+```
 $ oc create -f deploy/crds/ansible-operator.openshift.pub_hellos_crd.yaml
 ```
 
-Once this is done, there are two ways to run the operator:
+#### Run the operator inside the cluster
 
-- As a pod inside a Kubernetes cluster
-- As a go program outside the cluster using `operator-sdk`
-
-#### 1. Run as a pod inside a Kubernetes cluster
-
-Running as a pod inside a Kubernetes cluster is preferred for production use.
+NOTE: Replace <username> with your own user
 
 Build the hello-operator image and push it to a registry:
 ```
-$ operator-sdk build {{IMAGE_REGISTRY}}/{username}/ansibleoperator:latest
-$ docker push {{IMAGE_REGISTRY}}/{username}/ansibleoperator:latest
+$ operator-sdk build {{IMAGE_REGISTRY}}/ansibleoperator:<user>
+$ docker push {{IMAGE_REGISTRY}}/ansibleoperator:<user>
 ```
 
 Kubernetes deployment manifests are generated in `deploy/operator.yaml`. The
 deployment image in this file needs to be modified from the placeholder
 `REPLACE_IMAGE` to the previous built image. To do this run:
+
 ```
-$ sed -i 's|{{ REPLACE_IMAGE }}|{{IMAGE_REGISTRY}}/{username}/ansibleoperator:latest|g' deploy/operator.yaml
+$ sed -i 's|{{ REPLACE_IMAGE }}|{{IMAGE_REGISTRY}}/ansibleoperator:<username>|g' deploy/operator.yaml
 ```
 
 The `imagePullPolicy` also requires an update.  To do this run:
@@ -193,21 +196,21 @@ $ sed -i 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator
 ```
 
 Deploy the hello-operator:
-```sh
+```
 $ oc create -f deploy
 ```
 
 Verify that the hello-operator is up and running:
 
-```sh
+```
 $ oc get deployment
 ```
 
-#### Create a Memcached CR
+#### Create a Hello CR
 
 Modify `deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml` as shown and create a `Hello` custom resource:
 
-```sh
+```
 $ cat deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
 apiVersion: "cache.example.com/v1alpha1"
 apiVersion: ansible-operator.openshift.pub/v1
@@ -218,12 +221,12 @@ spec:
   # Add fields here
   size: 3
 
-$ oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
+oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
 ```
 
 Ensure that the operator creates the deployment for the CR:
 
-```sh
+```
 $ oc get deployment
 ```
 
@@ -233,7 +236,7 @@ The `hello-operator` deployment creates a Pod with two containers, `operator` an
 The `ansible` container exists only to expose the standard Ansible stdout logs that most Ansible
 users will be familiar with. In order to see the logs from a particular container, you can run
 
-```sh
+```
 oc logs deployment/hello-operator -c ansible
 oc logs deployment/hello-operator -c operator
 ```
@@ -246,7 +249,7 @@ whereas the `operator` logs will contain much more detailed information about th
 Occasionally while developing additional debug in the Operator logs is nice to have. To enable Ansible debug output, ie `-vvvv`.
 Add the following to the `operator.yaml` manifest.
 
-```yaml
+```
           env:
            ...
            - name: ANSIBLE_VERBOSITY
@@ -258,13 +261,13 @@ Add the following to the `operator.yaml` manifest.
 Change the `spec.size` field in the memcached CR from 3 to 4 and apply the
 change:
 
-```sh
+```
 $ oc patch hello example-hello --patch '{"spec": {"size": 2 }}'
 ```
 
 Confirm that the operator changes the deployment size:
 
-```sh
+```
 $ oc get deployment
 ```
 
@@ -272,7 +275,7 @@ $ oc get deployment
 
 Clean up the resources:
 
-```sh
+```
 $ oc delete -f deploy/crds
 $ oc delete -f deploy
 ```

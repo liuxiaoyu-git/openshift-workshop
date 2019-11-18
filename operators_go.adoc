@@ -6,8 +6,8 @@
 * Go version 1.12.x
 * operator-sdk version v0.8.x
 * docker version 17.03+ or buildah version 1.8.2+
-* kubectl or oc (for OpenShift)
-* Access to a Kubernetes or an OpenShift cluster
+* oc
+* Access to an OpenShift cluster
 * Quay account
 
 #### Skaffolding project
