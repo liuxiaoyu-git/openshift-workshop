@@ -10,3 +10,11 @@ modules:
     name: Deploy a Go Operator
   operators_ansible:
     name: Deploy an Ansible Operator
+  serverless_intro:
+    name: About Serverless
+  serverless_checks:
+    name: Check Serverless installation
+  serverless_first_app:
+    name: Deploy your first serverless application
+  serverless_revs_tags:
+    name: Revisions, Tagging and scaling
