@@ -1,12 +1,12 @@
 id: "serverless-workshop"
-name: "Using Serverless workloads"
+name: "Deploying Serverless applications"
+
+vars:
+  KNATIVE_NS: test-knative
+  OCP_DOMAIN: apps.pro1.mattiamascia.com
 
 content:
-  url: https://raw.githubusercontent.com/radudd/workshopper-template/master
-
-#vars:
-#  KNATIVE_NS: test-knative
-#  OCP_DOMAIN: apps.pro1.mattiamascia.com
+  url: https://raw.githubusercontent.com/openlab-red/openshift-workshop/master
 
 modules:
   activate:
