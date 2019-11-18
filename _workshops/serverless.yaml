@@ -1,9 +1,6 @@
 id: "serverless-workshop"
 name: "Deploying Serverless applications"
 
-vars:
-  KNATIVE_NS: test-knative
-  OCP_DOMAIN: apps.pro1.mattiamascia.com
 
 content:
   url: https://raw.githubusercontent.com/openlab-red/openshift-workshop/master
@@ -14,4 +11,3 @@ modules:
   - serverless_checks
   - serverless_first_app
   - serverless_revs_tags
-
