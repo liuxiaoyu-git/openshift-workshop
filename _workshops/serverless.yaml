@@ -4,9 +4,9 @@ name: "Using Serverless workloads"
 content:
   url: https://raw.githubusercontent.com/radudd/workshopper-template/master
 
-vars:
-  KNATIVE_NS: test-knative
-  OCP_DOMAIN: apps.pro1.mattiamascia.com
+#vars:
+#  KNATIVE_NS: test-knative
+#  OCP_DOMAIN: apps.pro1.mattiamascia.com
 
 modules:
   activate:
@@ -14,3 +14,4 @@ modules:
   - serverless_checks
   - serverless_first_app
   - serverless_revs_tags
+
