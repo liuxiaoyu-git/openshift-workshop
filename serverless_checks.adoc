@@ -1,10 +1,8 @@
-### About
+### Pre-checks
 
 The cluster is already preinstalled with OpenShift Serverless and OpenShift ServiceMesh operators (which is required for Serverless) and the Custom Resources are already created.
 
-In the first part we will check the components of ServiceMesh and Serverless, then we will deploy an application using Serverless
-
-### Checks
+In this section, we will check the components of ServiceMesh and Serverless.
 
 #### ServiceMesh
 
@@ -28,7 +26,7 @@ The namespaces where we'll test the serverless application needs to be part of m
 Let's now check the deployed pods of the Control Plane:
 
 ```
-╰─➤  oc get pod -n istio-system
+oc get pod -n istio-system
 NAME                                     READY   STATUS    RESTARTS   AGE
 cluster-local-gateway-6647b96c4d-f6fcx   1/1     Running   1          23h
 istio-citadel-79979464d-np24l            1/1     Running   1          23h
@@ -49,7 +47,7 @@ oc get -o yaml knativeserving knative-serving -n knative-serving
 
 And let's check its components
 ```
-╰─➤  oc get servicemonitor -n knative-serving
+oc get servicemonitor -n knative-serving
 NAME         AGE
 activator    23h
 autoscaler   23h

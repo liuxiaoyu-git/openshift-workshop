@@ -7,5 +7,5 @@ content:
 modules:
   activate:
   - operators_quay
-  - operators_go
   - operators_ansible
+  - operators_go

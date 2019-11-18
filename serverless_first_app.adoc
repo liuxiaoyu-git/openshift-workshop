@@ -33,7 +33,7 @@ oc get svc
 
 Now let's go to the OpenShift Console and check there the deployed serverless components
 
-image::serverless-1.jpg[]
+image::serverless-1.png[]
 
 You'll notice that a Service, a Revision and Route have been created.
 
@@ -43,17 +43,17 @@ For deploying the same service using kn client, use the following command:
 
 ```
 kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ                                                                   130 ↵
-Service 'hellos' successfully created in namespace '${KNATIVE_NS}'.
+Service 'hellos' successfully created in namespace '{{KNATIVE_NS}}'.
 Waiting for service 'hello' to become ready ... OK
 
 Service URL:
-http://hello.${KNATIVE_NS}.${OCP_DOMAIN}
+http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
 ```
 
 Check the URL
 
 ```
-curl http://hello.${KNATIVE_NS}.${OCP_DOMAIN}
+curl http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
 ```
 
 And then the pods
@@ -61,9 +61,9 @@ And then the pods
 oc get pods
 ```
 
-Now let's check the Developer Console in OpenShift https://{{ OPENSHIFT_CONSOLE_URL }}/topology
+Now let's check the Developer Console in OpenShift https://{{ OCP_CONSOLE_URL }}/topology
 
-image::serverless-2.jpg[]
+image::serverless-2.png[]
 
 You'll notice that the Deployment autoscales(or already autoscaled) to 0 pods because no traffic was sent in the last 90 seconds.
 
@@ -77,12 +77,12 @@ The values can be updated in the `config-autoscaler` ConfigMap. Check its conten
 Now fire another request to the service 
 
 ```
-curl http://hello.${KNATIVE_NS}.${OCP_DOMAIN}
+curl http://hello.{KNATIVE_NS}.{{OCP_DOMAIN}}
 ```
 
-And switch to the Developer Console {{ OPENSHIFT_CONSOLE_URL }}/topology
+And switch to the Developer Console {{ OCP_CONSOLE_URL }}/topology
 
-image::serverless-3.jpg[]
+image::serverless-3.png[]
 
 As you can already imagine, the autoscaler scaled the deployment to 1 and answered to the request.
 
