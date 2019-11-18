@@ -1,0 +1,122 @@
+### About
+
+Service Mesh is required for the installation of OpenShift Serverless. 
+
+Red Hat OpenShift Service Mesh provides a platform for behavioral insight and operational control over your networked microservices in a service mesh. With Red Hat OpenShift Service Mesh, you can connect, secure, and monitor microservices in your OpenShift Container Platform environment
+
+Red Hat OpenShift Service Mesh is logically split into a data plane and a control plane:
+
+The data plane is a set of intelligent proxies deployed as sidecars. These proxies intercept and control all inbound and outbound network communication between microservices in the service mesh. Sidecar proxies also communicate with Mixer, the general-purpose policy and telemetry hub.
+
+* Envoy proxy intercepts all inbound and outbound traffic for all services in the service mesh. Envoy is deployed as a sidecar to the relevant service in the same pod.
+
+The control plane manages and configures proxies to route traffic, and configures Mixers to enforce policies and collect telemetry.
+
+* Mixer enforces access control and usage policies (such as authorization, rate limits, quotas, authentication, and request tracing) and collects telemetry data from the Envoy proxy and other services.
+
+* Pilot configures the proxies at runtime. Pilot provides service discovery for the Envoy sidecars, traffic management capabilities for intelligent routing (for example, A/B tests or canary deployments), and resiliency (timeouts, retries, and circuit breakers).
+
+* Citadel issues and rotates certificates. Citadel provides strong service-to-service and end-user authentication with built-in identity and credential management. You can use Citadel to upgrade unencrypted traffic in the service mesh. Operators can enforce policies based on service identity rather than on network controls using Citadel.
+
+* Galley ingests the service mesh configuration, then validates, processes, and distributes the configuration. Galley protects the other service mesh components from obtaining user configuration details from OpenShift Container Platform.
+
+Red Hat OpenShift Service Mesh also uses the istio-operator to manage the installation of the control plane. An Operator is a piece of software that enables you to implement and automate common activities in your OpenShift cluster. It acts as a controller, allowing you to set or change the desired state of objects in your cluster.
+
+The following procedure installs a version of the ServiceMesh control plane that acts as an ingress to your applications
+
+### Install Service Mesh
+
+#### Install OpenShift ServiceMesh Operator
+
+This can be installed from OperatorHub from the Console.
+Starting with Red Hat OpenShift Service Mesh 1.0.2, you must install the Elasticsearch Operator, the Jaeger Operator, and the Kiali Operator before the Red Hat OpenShift Service Mesh Operator can install the control plane.
+
+Install these operators before you proceed.
+
+# Create Service Mesh Control Plane
+
+ServiceMesh control plane must run in istio_namespace Just create the following custom resource
+
+```
+oc new-project istio-system
+
+cat <<EOF >smcp.yaml
+apiVersion: maistra.io/v1
+kind: ServiceMeshControlPlane
+metadata:
+  name: basic-install
+  namespace: istio-system
+spec:
+  istio:
+    global:
+      multitenant: true
+      proxy:
+        autoInject: disabled
+      omitSidecarInjectorConfigMap: true
+      disablePolicyChecks: false
+      defaultPodDisruptionBudget:
+        enabled: false
+    istio_cni:
+      enabled: true
+    gateways:
+      istio-ingressgateway:
+        autoscaleEnabled: false
+        type: LoadBalancer
+      istio-egressgateway:
+        enabled: false
+      cluster-local-gateway:
+        autoscaleEnabled: false
+        enabled: true
+        labels:
+          app: cluster-local-gateway
+          istio: cluster-local-gateway
+        ports:
+          - name: status-port
+            port: 15020
+          - name: http2
+            port: 80
+            targetPort: 8080
+          - name: https
+            port: 443
+    mixer:
+      enabled: false
+      policy:
+        enabled: false
+      telemetry:
+        enabled: false
+    pilot:
+      autoscaleEnabled: false
+      sidecar: false
+    kiali:
+      enabled: false
+    tracing:
+      enabled: false
+    prometheus:
+      enabled: false
+    grafana:
+      enabled: false
+    sidecarInjectorWebhook:
+      enabled: false
+EOF
+
+oc create -f smcp.yaml
+```
+
+You must have a Service Mesh Member Roll for the control plane namespace, if the Service Mesh is configured for multi-tenancy. For applications to use the deployed control plane and ingress, their namespaces must be part of a member roll.
+A multi-tenant control plane installation only affects namespaces configured as part of the Service Mesh. You must specify the namespaces associated with the Service Mesh in a ServiceMeshMemberRoll resource located in the same namespace as the ServiceMeshControlPlane resource and name it default.
+
+```
+cat <<EOF > smmr.yaml
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  members:
+  - knative-serving
+  - test-knative
+EOF
+
+oc create -f smmr.yaml
+```

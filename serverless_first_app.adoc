@@ -42,18 +42,18 @@ As mentioned in the intro section, for a better experience using serverless work
 For deploying the same service using kn client, use the following command:
 
 ```
-╰─➤  kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ                                                                   130 ↵
-Service 'hellos' successfully created in namespace 'test-knative'.
+kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ                                                                   130 ↵
+Service 'hellos' successfully created in namespace '${KNATIVE_NS}'.
 Waiting for service 'hello' to become ready ... OK
 
 Service URL:
-http://hello.test-knative.apps.pro1.mattiamascia.com
+http://hello.${KNATIVE_NS}.${OCP_DOMAIN}
 ```
 
 Check the URL
 
 ```
-curl http://hello.test-knative.apps.pro1.mattiamascia.com
+curl http://hello.${KNATIVE_NS}.${OCP_DOMAIN}
 ```
 
 And then the pods
@@ -77,7 +77,7 @@ The values can be updated in the `config-autoscaler` ConfigMap. Check its conten
 Now fire another request to the service 
 
 ```
-curl http://hello.test-knative.apps.pro1.mattiamascia.com
+curl http://hello.${KNATIVE_NS}.${OCP_DOMAIN}
 ```
 
 And switch to the Developer Console {{ OPENSHIFT_CONSOLE_URL }}/topology
