@@ -2,7 +2,7 @@ id: "operators-workshop"
 name: "Deploying your first operators using Ansible and Go"
 
 content:
-  url: https://raw.githubusercontent.com/openlab-red/openshift-workshop
+  url: https://raw.githubusercontent.com/openlab-red/openshift-workshop/master
 
 modules:
   activate:
