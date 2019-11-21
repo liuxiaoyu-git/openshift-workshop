@@ -1,16 +1,16 @@
 ### Deploy helloWorld service
 
-Now the fun begins. Let's create our first Serverless Service. Please make sure to be in the namespace assigned to your user - {{ NAMESPACE }}. We will deploy a hello-world service.
+Now the fun begins. Let's create our first Serverless Service. Please make sure to be in the namespace assigned to your user - <myuser-namespace>. We will deploy a hello-world service.
 
 ```
-oc project +{{ NAMESPACE }}+
+oc project <myuser-namespace>
 
 cat <<EOF > service.yaml
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
   name: helloworld-go
-  namespace: +{{ NAMESPACE }}+
+  namespace: <myuser-namespace>
 spec:
   template:
     spec:

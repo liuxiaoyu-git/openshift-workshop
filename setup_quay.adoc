@@ -2,7 +2,7 @@
 
 For this lab, we'll use the internal Quay registry. Quay is configured to use Red Hat SSO for authentication.
 
-#### Steps
+#### Steps
 
 * Open https://{{IMAGE_REGISTRY}} in a browser and login using Red Hat SSO and GitHub IDP. If you don't have GitHub account, please use one of the user provided.
 
