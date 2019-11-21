@@ -1,4 +1,4 @@
-### Pre-checks
+### Check installation
 
 The cluster is already preinstalled with OpenShift Serverless and OpenShift ServiceMesh operators (which is required for Serverless) and the Custom Resources are already created.
 

@@ -1,6 +1,4 @@
-### Create your first Ansible operator
-
-#### Requirements
+### Requirements
 
 * Git
 * operator-sdk 
@@ -9,7 +7,7 @@
 * Access to a Kubernetes or an OpenShift cluster
 * Quay account
 
-#### Skafolding project
+### Scafolding project
 
 ```
 mkdir projects && cd projects
@@ -17,11 +15,11 @@ operator-sdk new hello-operator \
     --api-version=ansible-operator.openshift.pub/v1  \
     --kind=Hello \
     --type=ansible
-cd ansible-operator
+cd hello-operator
 ```
 
 
-#### Watches file
+### Watches file
 
 The Watches file contains a list of mappings from custom resources, identified
 by it's Group, Version, and Kind, to an Ansible Role or Playbook. The Operator
@@ -75,18 +73,21 @@ An example Watches file:
     foo: bar
 ```
 
-#### Customize the operator logic
+### Customize the operator logic
 
 For this example the ansible-operator will execute the following
 reconciliation logic for each `Hello` Custom Resource (CR):
-- Create a hello Deployment if it doesn't exist
-- Ensure that the Deployment size is the same as specified by the `Hello` CR
 
-#### Watch the Memcached CR
+* Create a hello Deployment if it doesn't exist
+* Ensure that the Deployment size is the same as specified by the `Hello` CR
+
+### Watch the Hello CR
 
 By default, the hello-operator watches `Hello` resource events as shown in `watches.yaml` and executes Ansible Role `Hello`:
 
 ```
+$ cat watches.yaml
+
 ---
 - version: v1
   group: ansible-operator.openshift.pub
@@ -99,7 +100,7 @@ By default, the hello-operator watches `Hello` resource events as shown in `watc
 Defining the spec for an Ansible Operator can be done entirely in Ansible. The
 Ansible Operator will simply pass all key value pairs listed in the Custom
 Resource spec field along to Ansible as extra
-[variables](https://docs.ansible.com/ansible/2.5/user_guide/playbooks_variables.html#passing-variables-on-the-command-line).
+variables.
 The names of all variables in the spec field are converted to snake_case
 by the operator before running ansible. For example, `serviceAccount` in
 the spec becomes `service_account` in ansible.
@@ -119,24 +120,22 @@ Now that we have the spec defined, we can define what Ansible is actually
 executed on resource changes. Since this is an Ansible Role, the default
 behavior will be to execute the tasks in `roles/hello/tasks/main.yml`. We
 want Ansible to create a deployment if it does not exist which runs the
-`openshift/hello-openshift` image. Ansible 2.5+ supports the [k8s Ansible
-Module](https://docs.ansible.com/ansible/2.6/modules/k8s_module.html) which we
-will leverage to control the deployment definition.
+`openshift/hello-openshift` image.
 
 Modify `roles/hello/tasks/main.yml` to look like the following:
 
-```
----
+[subs=+macros]
+----
 - name: hello
   k8s:
     definition:
       kind: Deployment
       apiVersion: apps/v1
       metadata:
-        name: '{{ meta.name }}-hello'
-        namespace: '{{ meta.namespace }}'
+        name: '{ { meta.name } }-hello'
+        namespace: '{ { meta.namespace } }'
       spec:
-        replicas: "{{size}}"
+        replicas: { {size} }
         selector:
           matchLabels:
             app: hello
@@ -148,11 +147,10 @@ Modify `roles/hello/tasks/main.yml` to look like the following:
             containers:
             - name: hello
               image: "openshift/hello-openshift"
-
-```
+----
 
 It is important to note that we used the `size` variable to control how many
-replicas of the Memcached deployment we want. We set the default to `1`, but
+replicas of the Hello deployment we want. We set the default to `1`, but
 any user can create a Custom Resource that overwrites the default.
 
 ### Build and run the operator
@@ -172,14 +170,14 @@ Deploy the CRD:
 $ oc create -f deploy/crds/ansible-operator.openshift.pub_hellos_crd.yaml
 ```
 
-#### Run the operator inside the cluster
+### Run the operator
 
-NOTE: Replace <username> with your own user
+NOTE: Replace <user> with your own user
 
 Build the hello-operator image and push it to a registry:
 ```
-$ operator-sdk build {{IMAGE_REGISTRY}}/ansibleoperator:<user>
-$ docker push {{IMAGE_REGISTRY}}/ansibleoperator:<user>
+$ operator-sdk build {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
+$ docker push {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
 ```
 
 Kubernetes deployment manifests are generated in `deploy/operator.yaml`. The
@@ -187,17 +185,17 @@ deployment image in this file needs to be modified from the placeholder
 `REPLACE_IMAGE` to the previous built image. To do this run:
 
 ```
-$ sed -i 's|{{ REPLACE_IMAGE }}|{{IMAGE_REGISTRY}}/ansibleoperator:<username>|g' deploy/operator.yaml
+$ sed -i 's|{ { REPLACE_IMAGE } }|{{IMAGE_REGISTRY}}/<user>/ansible-operator:latest|g' deploy/operator.yaml
 ```
 
 The `imagePullPolicy` also requires an update.  To do this run:
 ```
-$ sed -i 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml
+$ sed -i 's|{ { pull_policy\|default('\''Always'\'') } }|Always|g' deploy/operator.yaml
 ```
 
 Deploy the hello-operator:
 ```
-$ oc create -f deploy
+oc create -f deploy
 ```
 
 Verify that the hello-operator is up and running:
@@ -206,7 +204,7 @@ Verify that the hello-operator is up and running:
 $ oc get deployment
 ```
 
-#### Create a Hello CR
+### Create a Hello CR
 
 Modify `deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml` as shown and create a `Hello` custom resource:
 
@@ -221,7 +219,7 @@ spec:
   # Add fields here
   size: 3
 
-oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
+$ oc apply -f deploy/crds/ansible-operator.openshift.pub_v1_hello_cr.yaml
 ```
 
 Ensure that the operator creates the deployment for the CR:
@@ -262,7 +260,7 @@ Change the `spec.size` field in the memcached CR from 3 to 4 and apply the
 change:
 
 ```
-$ oc patch hello example-hello --patch '{"spec": {"size": 2 }}'
+$ oc patch hello example-hello --type merge --patch \'\{"spec": \{"size": 2 \}\}'
 ```
 
 Confirm that the operator changes the deployment size:
@@ -276,6 +274,7 @@ $ oc get deployment
 Clean up the resources:
 
 ```
-$ oc delete -f deploy/crds
+$ oc delete -f deploy/crds/*cr.yaml
+$ oc delete -f deploy/crds/*crd.yaml
 $ oc delete -f deploy
 ```

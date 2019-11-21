@@ -2,6 +2,9 @@
 
 Deploy Kafka custom resource
 
+The text +++<u>underline me</u>+++ is underlined
+The text {{test}} is underlined
+
 ----
 cat <<EOF | oc create -f - 
 apiVersion: kafka.strimzi.io/v1beta1

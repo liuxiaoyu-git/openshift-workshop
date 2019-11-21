@@ -1,21 +1,50 @@
 config:
-    renderer: asciidoc
-
-
+  vars:
+  - name: IMAGE_REGISTRY
+    value: quay.apps.ocp.bdmsky.net
+    desc: Image registry URL
+  - name: USER_NAMESPACE
+    value: userXY-Namespace
+    desc: User namespace
+  - name: OCP_DOMAIN
+    value: apps.pro1.mattiamascia.com
+    desc: OpenShift router domain
+  - name: OCP_CONSOLE
+    value: console-openshift-console.apps.pro1.mattiamascia.com
+    desc: OpenShift Console URL
+  
 modules:
   kafka:
     name: Install a Kafka cluster
-  operators_quay:
-    name: Configure Quay
+  setup_quay:
+    name: Setup your account in Quay
+    vars:
+      IMAGE_REGISTRY:
   operators_go:
     name: Deploy a Go Operator
+    vars:
+      IMAGE_REGISTRY:
   operators_ansible:
     name: Deploy an Ansible Operator
+    vars:
+      IMAGE_REGISTRY:
   serverless_intro:
     name: About Serverless
   serverless_checks:
     name: Check Serverless installation
+    vars:
+      OCP_DOMAIN:
+      OCP_CONSOLE:
+      USER_NAMESPACE:
   serverless_first_app:
     name: Deploy your first serverless application
+    vars:
+      OCP_DOMAIN:
+      OCP_CONSOLE:
+      USER_NAMESPACE:
   serverless_revs_tags:
-    name: Revisions, Tagging and scaling
+    name: Revisions, Tagging and Scaling
+    vars:
+      OCP_DOMAIN:
+      OCP_CONSOLE:
+      USER_NAMESPACE:

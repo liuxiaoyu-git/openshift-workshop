@@ -3,14 +3,14 @@
 Now the fun begins. Let's create our first Serverless Service. Please make sure to be in the namespace assigned to your user - {{ NAMESPACE }}. We will deploy a hello-world service.
 
 ```
-oc project {{ NAMESPACE }}
+oc project +{{ NAMESPACE }}+
 
 cat <<EOF > service.yaml
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
   name: helloworld-go
-  namespace: {{ NAMESPACE }}
+  namespace: +{{ NAMESPACE }}+
 spec:
   template:
     spec:
@@ -43,17 +43,17 @@ For deploying the same service using kn client, use the following command:
 
 ```
 kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ                                                                   130 ↵
-Service 'hellos' successfully created in namespace '{{KNATIVE_NS}}'.
+Service 'hellos' successfully created in namespace '<myuser-namespace>'.
 Waiting for service 'hello' to become ready ... OK
 
 Service URL:
-http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
 ```
 
 Check the URL
 
 ```
-curl http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
 ```
 
 And then the pods
@@ -77,7 +77,7 @@ The values can be updated in the `config-autoscaler` ConfigMap. Check its conten
 Now fire another request to the service 
 
 ```
-curl http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
 ```
 
 And switch to the Developer Console {{ OCP_CONSOLE_URL }}/topology

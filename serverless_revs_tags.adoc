@@ -15,7 +15,7 @@ kn service update hello --env TARGET=Kn
 Now do a GET request to the service. You will notice it got updated
 
 ```
-curl http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
 ```
 
 Each time a service gets updated, a new revision of is created with a new URL. That basically coincides with a creating a new Service and a new Deployment.
@@ -59,7 +59,7 @@ kn route list
 And performing a GET request. You'll notice the service is pointing to the old revision, because 90% is routing to that revision.
 
 ```
-curl  http://hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+curl  http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
 ```
 
 ### Tagging
@@ -75,10 +75,10 @@ kn service update hello --tag @latest=candidate --tag hello-chjnf-1=current
 This commands creates two new routes based on the specified revisions. Let's check
 
 ----
-curl http://current-hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}        
+curl http://current-hello.<myuser-namespace>.{{OCP_DOMAIN}}        
 Hello Knativ!
 
-curl http://candidate-hello.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+curl http://candidate-hello.<myuser-namespace>.{{OCP_DOMAIN}}
 Hello Kn!
 ----
 
@@ -126,7 +126,7 @@ kn service create hello-scale --image gcr.io/knative-samples/helloworld-go \
 After creating the service, let's check its status
 ----
 kn service list
-curl http://hello-scale.{{KNATIVE_NS}}.{{OCP_DOMAIN}}
+curl http://hello-scale.<myuser-namespace>.{{OCP_DOMAIN}}
 ----
 
 As `minScale` was set to 1, the deployment will always keep one running pod. Check the pods after 90 secods

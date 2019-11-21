@@ -10,36 +10,35 @@
 * Access to an OpenShift cluster
 * Quay account
 
-#### Skaffolding project
+#### Scaffolding project
 
 Note: You can chose between using dep or modules. Modules are used by default. In next versions it will also be added support by default for external vendoring (i.e. `--vendor=false`).
 
 ```
-mkdir projects && cd projects
-operator-sdk new hellogo-operator --repo --repo=github.com/radudd/hellogo-operator
+cd projects
+operator-sdk new hellogo-operator --repo=github.com/radudd/hellogo-operator
 cd hellogo-operator
 ```
 
 After that review the generated code and resources. Pay special attention to the following:
 
-* deploy folder containing yaml files to easily run your operator on kubernetes
-* cmd/manager The manager register the scheme for all custom resources under `pkg/apis` and run all controlers under `pkg/controller`
-* pkg/controller The controllers implementation
-* pkg/apis The custom types definitions
+* `deploy`: folder containing yaml files to easily run your operator on kubernetes
+* `cmd/manager`: The manager register the scheme for all custom resources under `pkg/apis` and run all controlers under `pkg/controller`
+* `pkg/controller`: The controllers implementation
+* `pkg/apis`: The custom types definitions
 
 Check the [project scaffolding layout](https://github.com/operator-framework/operator-sdk/blob/master/doc/project_layout.md) for more details
 
 #### Let's add a new CRD
 
 ```
-cd hellogo-operator
 operator-sdk add api --api-version=hellogo.workshop.redhat.com/v1alpha1 --kind=HelloGo
 ```
 
 After that we can see the following changed:
 
-* deploy/crds is created with a basic CRD (including OpenApiV3Schema validation) and a sample CR
-* pkg/apis now has a folder containing a file `<my_kind>_types.go` with the CRD struct
+* `deploy/crds` is created with a basic CRD (including OpenApiV3Schema validation) and a sample CR
+* `pkg/apis/hellogo/v1alpha1` contains a file `hellogo_types.go` with the CRD structs
 
 #### Create the controller for our CRD
 
@@ -49,11 +48,11 @@ operator-sdk add controller --api-version=hellogo.workshop.redhat.com/v1alpha1 -
 
 Let's review:
 
-* `pkg/controller/<my_kind>/<my_kind>_controller.go` has a default implementation that creates a `busybox` pod
+* `pkg/controller/hellogo/hellogo_controller.go` has a default implementation that creates a `busybox` pod
 
 #### Define the CRD
 
-Go to the `pkg/apis/<my_kind>/<my_kind>_types.go` file and define your custom resource.
+To update the spec of your CRD, go to the `pkg/apis/hellogo/v1alpha1/hellogo_types.go` file and add the necessary attributes - in this example we add a `size` attribute
 
 ```
 type HelloGoSpec struct {
@@ -71,7 +70,10 @@ When finished, run the following to update the generated code:
 operator-sdk generate k8s
 ```
 
-Note: Run this command each time you change the types
+
+NOTE: Run this command each time you change the types
+
+
 
 ### Generate the OpenAPI validation
 
@@ -79,32 +81,62 @@ Note: Run this command each time you change the types
 operator-sdk generate openapi
 ```
 
-Verify that your custom resource definition has a generated.
-
-Note: Run this command only when you want to replace the CRD with the new generated values. **This will overwrite any customization**
+NOTE: Run this command only when you want to replace the CRD with the new generated values. **This will overwrite any customization**
 
 #### Implement the controller
 
-1. Watch for changes in owned objects: Just add here the ones you feel necessary.
-1. Implement the reconcile loop: You will receive notification changes for all the watched objects (CustomResources and OwnedObjects). Create the owned objects that are missing or replace them if the expected objects don't match with the existing ones.
-1. Update the `role.yaml` in case different permissions are required (e.g. create `ingress` or `route`)
+* Watch for changes in owned objects: just add here the ones you feel necessary.
+* Implement the reconcile loop: You will receive notification changes for all the watched objects (CustomResources and OwnedObjects). Create the owned objects that are missing or replace them if the expected objects don't match with the existing ones. 
+Let's replace the `busybox` image with the `helloworld` one.
+
+.pkg/controller/hellogo/hellogo_controller.go
+----
+// newPodForCR returns a busybox pod with the same name/namespace as the cr
+func newPodForCR(cr *hellogov1alpha1.HelloGo) *corev1.Pod {
+        labels := map[string]string{
+                "app": cr.Name,
+        }
+        return &corev1.Pod{
+                ObjectMeta: metav1.ObjectMeta{
+                        Name:      cr.Name + "-pod",
+                        Namespace: cr.Namespace,
+                        Labels:    labels,
+                },
+                Spec: corev1.PodSpec{
+                        Containers: []corev1.Container{
+                                {
+                                        Name:    "hellogo",  					// changed here
+                                        Image:   "openshift/hello-openshift",   // changed here
+                                        Command: []string{"sleep", "3600"},     // remove this line
+                                },
+                        },
+                },
+        }
+}
+----
+
+
+* Update the `role.yaml` in case different permissions are required (e.g. create `ingress` or `route`)
 
 #### Run the Operator locally
 
+NOTE: Replace <myuser-namespace> with your namespace
+
 ```
-oc project go-operator-tutorial
-oc create -f deploy/crds/hellogo_v1alpha1_hellogo_crd.yaml
+oc project <myuser-namespace>
+oc create -f deploy/crds/hellogo.workshop.redhat.com_hellogos_crd.yaml
 go mod vendor
-operator-sdk up local --namespace=go-operator-tutorial
+operator-sdk up local --namespace=<myuser-namespace>
 ```
 
 Now you can create an example CR. Notice that the generated CR is not valid.
 
 ### Build the Operator
 
+NOTE: Replace <user> with your own username
 
 ```
-operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/{username}/gooperators/hellogo-operator:latest
+$ operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/<user/>go-operator:latest
 ...
 INFO[0008] Operator build complete.
 ```
@@ -112,25 +144,18 @@ INFO[0008] Operator build complete.
 Push the image to your quay.io repository (make sure the repository is public for this workshop)
 
 ```
-docker push {{IMAGE_REGISTRY}}/{username}/gooperators/hellogo-operator:latest
+docker push {{IMAGE_REGISTRY}}/<user/>go-operator:latest
 ```
 
-### Deploy the Operator in your Kubernetes cluster
+### Deploy the Operator
 
 Before deploying the Operator make sure you replaced all the placeholders:
 
 ```
-sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/{username}/gooperators/hellogo-operator:latest|g' deploy/operator.yaml
+sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/<user/>go-operator:latest|g' deploy/operator.yaml
 ```
 
-Create the CRD (if you haven't done it yet)
-
-```
-oc create -f deploy/crds/hellogo_v1alpha1_hellogo_crd.yaml
-operator-sdk up local --namespace=default
-```
-
-Create all the necessary resources
+Create all the necessary resources:
 
 ```
 $ oc create -f deploy
@@ -149,6 +174,8 @@ oc get pods
 
 #### Cleanup
 ```
-oc delete -f deploy
-oc delete -f deploy/cr
+$ oc delete -f deploy/crds/*cr.yaml
+$ oc delete -f deploy/crds/*crd.yaml
+$ oc delete -f deploy
 ```
+

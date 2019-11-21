@@ -1,11 +1,6 @@
 id: "serverless-workshop"
 name: "Deploying Serverless applications"
 
-vars:
-  KNATIVE_NS: "<ASSIGNED_NS>"
-  OCP_DOMAIN: apps.pro1.mattiamascia.com
-  OCP_CONSOLE: console-openshift-console.apps.pro1.mattiamascia.com
-
 content:
   url: https://raw.githubusercontent.com/openlab-red/openshift-workshop/master
 
