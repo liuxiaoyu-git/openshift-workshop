@@ -215,7 +215,7 @@ Or using Nexus
 
 [source,bash]
 ----
-tkn pipeline start quarkus-deploy -p "MAVEN_MIRROR_URL=http://nexus3.labs:8081/nexus/content/groups/public" -p "APP_NAME=people"  -s pipeline
+tkn pipeline start quarkus-deploy -p "MAVEN_MIRROR_URL=http://nexus3.labs:8081/repository/maven-all-public/" -p "APP_NAME=people"  -s pipeline
 ----
 
 ```

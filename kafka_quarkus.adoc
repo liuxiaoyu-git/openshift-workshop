@@ -232,7 +232,7 @@ Then build with OpenShift
 
 [source,sh,role="copypaste"]
 ----
-oc new-build https://gogs.apps.ocp.bdmsky.net/<username>/quarkus-workshop.git --docker-image quay.io/quarkus/ubi-quarkus-native-s2i:19.2.1 --name people -l app=people
+    oc new-build https://gogs.apps.ocp.bdmsky.net/<username>/quarkus-workshop.git --docker-image quay.io/quarkus/ubi-quarkus-native-s2i:19.2.1 -e MAVEN_MIRROR_URL=http://nexus3.labs:8081/repository/maven-all-public/ --name people -l app=people
 ----
 
 The build should take a minute or two to complete.
