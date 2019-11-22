@@ -13,15 +13,15 @@ apiVersion: kafka.strimzi.io/v1beta1
 kind: Kafka
 metadata:
   name: names-cluster
-  namespace: kafka
+  namespace: <myuser-namespace>
 spec:
   entityOperator:
     topicOperator:
       reconciliationIntervalSeconds: 30
-      watchedNamespace: kafka
+      watchedNamespace: <myuser-namespace>
     userOperator:
       reconciliationIntervalSeconds: 30
-      watchedNamespace: kafka
+      watchedNamespace: <myuser-namespace>
   kafka:
     listeners:
       external:
@@ -71,7 +71,7 @@ Verify that the Kafka and Zookeeper pods are starting up by executing this comma
 
 [source,sh,role="copypaste"]
 ----
-oc get pods|grep names-cluster
+oc get pods -lstrimzi.io/cluster=names-cluster
 ----
 
 You'll see something like:
@@ -93,9 +93,15 @@ Don't worry if they're not all in the _Running_ status, they will eventually com
 
 ==== Inside cluster
 
+Launch Producer
 [source,sh,role="copypaste"]
 ----
 oc -n <myuser-namespace> run kafka-producer -ti --image=strimzi/kafka:0.14.0-kafka-2.3.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --broker-list names-cluster-kafka-bootstrap:9092 --topic my-topic
+----
+
+Launch Consumer
+[source,sh,role="copypaste"]
+----
 oc -n <myuser-namespace> run kafka-consumer -ti --image=strimzi/kafka:0.14.0-kafka-2.3.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server names-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning
 ----
 
@@ -105,7 +111,7 @@ Create a truststore containing Kafka CA certificates
 
 [source,sh,role="copypaste"]
 ----
-oc get secret names-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 --decode > ca.crt
+oc extract secret/names-cluster-cluster-ca-cert
 keytool -import -trustcacerts -alias root -file ca.crt -keystore truststore.jks -storepass 123456 -noprompt
 ----
 
