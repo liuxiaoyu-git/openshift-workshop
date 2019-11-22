@@ -1,0 +1,36 @@
+### Creating repository on Quay
+
+For this lab, we'll use the internal Quay registry. Quay is configured to use Red Hat SSO for authentication.
+
+#### Steps
+
+* Open https://{{IMAGE_REGISTRY}} in a browser and login using Red Hat SSO and GitHub IDP. If you don't have GitHub account, please use one of the user provided.
+
+* Now you'll need to create one new repository, called _people_
+
+* Go to the repository settings and provide Write permissions to the _generic_ Robot account created in the previous lab.
+
+* Now go to _Account Settings_ and click on the Robot icon on the left panel. Then click on the wheel from the end of the line corresponding to your account and then on _View Credentials_. Choose _Kuberenetes Secret_ and get the yaml file.
+
+* Copy the Secret defined in the yaml file and save it locally as `secret.yaml`. Then you'll neeed to link it to the `pipeline` service accunt. Tekton uses `pipeline` service account to communicate with Kubernetes API and it needs the credentials for Quay in order to be able to push and pull images.
+
+Switch to your project
+
+[source,sh,role="copypaste"]
+----
+oc project <myuser-namespace>
+----
+
+Then create the secret
+[source,sh,role="copypaste"]
+----
+oc create -f secret.yaml
+----
+
+Link the secret to `pipeline` service account
+[source,sh,role="copypaste"]
+----
+oc secrets link pipeline <username>-generic-pull-secret --for=pull
+oc secrets link pipeline <username>-generic-pull-secret 
+----
+

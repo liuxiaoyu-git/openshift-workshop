@@ -14,11 +14,12 @@
 
 Note: You can chose between using dep or modules. Modules are used by default. In next versions it will also be added support by default for external vendoring (i.e. `--vendor=false`).
 
-```
+[source,sh,role="copypaste"]
+----
 cd projects
 operator-sdk new hellogo-operator --repo=github.com/radudd/hellogo-operator
 cd hellogo-operator
-```
+----
 
 After that review the generated code and resources. Pay special attention to the following:
 
@@ -31,9 +32,10 @@ Check the [project scaffolding layout](https://github.com/operator-framework/ope
 
 #### Let's add a new CRD
 
-```
+[source,sh,role="copypaste"]
+----
 operator-sdk add api --api-version=hellogo.workshop.redhat.com/v1alpha1 --kind=HelloGo
-```
+----
 
 After that we can see the following changed:
 
@@ -42,9 +44,10 @@ After that we can see the following changed:
 
 #### Create the controller for our CRD
 
-```
+[source,sh,role="copypaste"]
+----
 operator-sdk add controller --api-version=hellogo.workshop.redhat.com/v1alpha1 --kind=HelloGo
-```
+----
 
 Let's review:
 
@@ -66,9 +69,10 @@ type HelloGoSpec struct {
 
 When finished, run the following to update the generated code:
 
-```
+[source,sh,role="copypaste"]
+----
 operator-sdk generate k8s
-```
+----
 
 
 NOTE: Run this command each time you change the types
@@ -77,9 +81,10 @@ NOTE: Run this command each time you change the types
 
 ### Generate the OpenAPI validation
 
-```
+[source,sh,role="copypaste"]
+----
 operator-sdk generate openapi
-```
+----
 
 NOTE: Run this command only when you want to replace the CRD with the new generated values. **This will overwrite any customization**
 
@@ -122,12 +127,13 @@ func newPodForCR(cr *hellogov1alpha1.HelloGo) *corev1.Pod {
 
 NOTE: Replace <myuser-namespace> with your namespace
 
-```
+[source,sh,role="copypaste"]
+----
 oc project <myuser-namespace>
 oc create -f deploy/crds/hellogo.workshop.redhat.com_hellogos_crd.yaml
 go mod vendor
 operator-sdk up local --namespace=<myuser-namespace>
-```
+----
 
 Now you can create an example CR. Notice that the generated CR is not valid.
 
@@ -135,47 +141,60 @@ Now you can create an example CR. Notice that the generated CR is not valid.
 
 NOTE: Replace <user> with your own username
 
-```
-$ operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/<user/>go-operator:latest
+[source,sh,role="copypaste"]
+----
+operator-sdk build --image-builder docker {{IMAGE_REGISTRY}}/<user/>go-operator:latest
+----
+
+----
 ...
 INFO[0008] Operator build complete.
-```
+----
 
 Push the image to your quay.io repository (make sure the repository is public for this workshop)
 
-```
+[source,sh,role="copypaste"]
+----
 docker push {{IMAGE_REGISTRY}}/<user/>go-operator:latest
-```
+----
 
 ### Deploy the Operator
 
 Before deploying the Operator make sure you replaced all the placeholders:
 
-```
+[source,sh,role="copypaste"]
+----
 sed -i 's|REPLACE_IMAGE|{{IMAGE_REGISTRY}}/<user/>go-operator:latest|g' deploy/operator.yaml
-```
+----
 
 Create all the necessary resources:
 
-```
-$ oc create -f deploy
+[source,sh,role="copypaste"]
+----
+oc create -f deploy
+----
+
+----
 deployment.apps/hellogo-operator created
 role.rbac.authorization.k8s.io/hellogo-operator created
 rolebinding.rbac.authorization.k8s.io/hellogo-operator created
 serviceaccount/hellogo-operator created
-```
+----
 
 Deploy the CR and check if the hello pod is created by the operator
 
-```
+[source,sh,role="copypaste"]
+----
 oc create -f deploy/crds/hellogo.workshop.redhat.com_v1alpha1_hellogo_cr.yaml                                       
 oc get pods
-```
+----
 
 #### Cleanup
-```
-$ oc delete -f deploy/crds/*cr.yaml
-$ oc delete -f deploy/crds/*crd.yaml
-$ oc delete -f deploy
-```
+
+[source,sh,role="copypaste"]
+----
+oc delete -f deploy/crds/*cr.yaml
+oc delete -f deploy/crds/*crd.yaml
+oc delete -f deploy
+----
 

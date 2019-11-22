@@ -1,0 +1,238 @@
+=== Pipeline Setup
+
+IMPORTANT: We need to import quay image and deploy dc, svc and route if using only rollout. Otherwise we'll need a condition to check if app is not present... and if not use new-app. This needs to be done on both DEV and PROD
+
+IMPORTANT: Update pictures
+
+This tutorial sets up a Tekton pipeline for building and deploying a application. We will use the `people` Quarkus application, i.e. the one that uses Quarkus Kafka extension. 
+Since Tekton provides the ability to deploy applications to different clusters, we will use dedicated clusters for Dev and Prod. _OpenShift Pipelines Operator_ needs to be installed only on the Dev cluster.
+
+The pipeline we will build will perform the following steps:
+
+* Run application Unit tests
+* Create a native build of the application using S2I
+* Push the image to the external container registry (Quay)
+* Deploy the application to Dev environment (dedicated Dev cluster)
+* (Optional) Run integration tests
+* Deploy the application to Prod environment (dedicated Prod cluster)
+
+==== Project Requirements
+
+Since Tekton is still in *Dev Preview*, the Service Accounts it uses require high privileges. 
+
+Switch to your own project. Make sure the resources of the `people` application are deleted.
+
+[source,sh,role="copypaste"]
+----
+oc project <myuser-namespace>
+----
+
+[source,sh,role="copypaste"]
+----
+oc delete all -l app=people
+----
+
+Then provide the required privileges to `pipeline` and `default` ServiceAccounts. 
+
+[source,sh,role="copypaste"]
+----
+oc adm policy add-scc-to-user privileged -z pipeline && \
+oc adm policy add-role-to-user edit -z pipeline && \
+oc adm policy add-role-to-user edit -z default && \
+oc adm policy add-scc-to-user privileged -z default && \
+oc adm policy add-scc-to-user anyuid -z default
+----
+
+NOTE: The pipeline Service Account is created automatically in all the cluster namespaces after OpenShift Pipelines Operator is installed. It is used by Tekton to interact with OpenShift API.
+
+==== Get authentication token for Prod cluster
+
+Tekton pipelines can be configured with `PipelineResources`, which can be used as inputs or outputs for the tasks in the pipeline. Example of `PipelineResources`: source, image, *cluster*.
+
+A `cluster` resource is basically a definition of another OpenShift cluster and this can be referenced in the Pipeline tasks using KUBECONFIG.
+
+In order to create a `cluster` resource, we will need to generate a secret on the Prod cluster which will contain: 
+* The API URL of the Prod cluster
+* The Namespace where the application will be deployed on Prod cluster
+* The JWT token of the `pipeline` service account from the same Namespace
+* Cluster CAFile
+
+This secret will be consumed by the `cluster` PipelineResource.
+
+To generate the secret, connect to Prod cluster and run `gen-secret-pipelineresource-prod-cluster.sh` script. 
+
+[source,sh,role="copypaste"]
+----
+bash gen-prod-secret.sh <API_URL_PROD_CLUSTER> <NAMESPACE_PROD_CLUSTER>
+----
+
+The generated file will be called `pipelineresource-prod-cluster-secret.yaml`
+
+==== Create Tekton resources on Dev cluster
+
+Now it's time to create the Tekton resources required by the pipeline.
+After connecting back to Dev cluster, first create `cluster` PipelineResource and the previously generated Secret.
+
+[source,sh,role="copypaste"]
+----
+oc create -f pipelineresource-prod-cluster-secret.yaml
+oc create -f pipelineresource-prod-cluster.yaml
+----
+
+After, create the `Tasks` resources. The following will be required for our pipeline:
+
+* openshift-client - for deploying the app on the same cluster
+* openshift-client-kubecfg - for deploying the app on a different cluster
+* s2i-quarkus-task - for building the app with Quarkus S2I image
+* mvn - for running unit tests
+
+[source,sh,role="copypaste"]
+----
+oc apply -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/openshift-client.yaml \
+  -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/openshift-client-kubecfg.yaml
+  -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/s2i-quarkus-task.yaml \
+  -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/mvn.yaml
+----
+
+Check if the tasks were successfully created.
+
+[source,sh,role="copypaste"]
+----
+tkn task ls
+----
+
+----
+NAME                        AGE
+openshift-client            13 seconds ago
+openshift-client-kubecfg    13 seconds ago
+s2i-quarkus                 13 seconds ago
+mvn                         13 seconds ago
+----
+
+Next, create the `PipelineResources`. Our pipeline requires two resources:
+
+NOTE: Replace <username> with your assigned user.
+
+* the source git repo hosting the application. 
+
+[source,sh,role="copypaste"]
+----
+cat <<EOF | oc create -f -
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: gogs
+spec:
+  type: git
+  params:
+    - name: url
+      value: https://gogs.apps.ocp.bdmsky.net/<username>/quarkus-workshop
+EOF
+----
+
+
+* the Docker repository for storing the image artifact
+
+[source,sh,role="copypaste"]
+----
+cat <<EOF | oc create -f -
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: quay
+spec:
+  type: image
+  params:
+    - name: url
+      value: "quay.apps.ocp.bdmsky.net/<username>/people:latest"
+EOF
+----
+
+NOTE: We need to deploy app in prod with image-stream missing tag
+NOTE: Need to add integration test
+
+We will use one `Condition` resource in order to check if the app is already deployed in production. Inspect the file and then create the resource.
+
+[source,sh,role="copypaste"]
+----
+oc create -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/prod-deployment/quarkus/condition-app-prod-deployed.yaml
+----
+
+Check if the resources were created
+
+[source,sh,role="copypaste"]
+----
+oc get pipelineresource
+----
+
+----
+NAME   AGE
+gogs   12s
+quay   10s
+----
+
+[source,sh,role="copypaste"]
+----
+oc get conditions
+----
+
+----
+NAME           AGE
+app-deployed   38s
+----
+
+
+=== Deploy the pipeline
+
+[source,bash]
+----
+oc create -f pipeline/deploy.yaml
+----
+Check the pipeline created
+
+[source,bash]
+----
+oc get pipeline
+----
+
+```
+NAME             AGE
+quarkus-deploy   41s
+```
+
+From Developer Console > Pipelines
+
+image::dev.pipeline.png[ Dev Pipeline ]
+
+=== Launch the pipeline
+
+[source,bash]
+----
+tkn pipeline start quarkus-deploy -p "APP_NAME=people"  -s pipeline
+----
+
+Or using Nexus
+
+[source,bash]
+----
+tkn pipeline start quarkus-deploy -p "MAVEN_MIRROR_URL=http://nexus3.labs:8081/nexus/content/groups/public" -p "APP_NAME=people"  -s pipeline
+----
+
+```
+? Choose the git resource to use for app-git: openlab-red (https://gogs.apps.ocp.bdmsky.net/<username>/quarkus-workshop)
+? Choose the image resource to use for app-image: quarkus-internal-image (quay.apps.ocp.bdmsky.net/<username>/people:latest)
+? Value of param `APP_NAME` ? (Default is quarkus) people
+Pipelinerun started: quarkus-deploy-run-mww4f
+Showing logs...
+```
+
+== Green
+
+image::dev.pipeline.green.png[ Green Pipeline ]
+
+== Verify
+
+[source,bash]
+----
+oc get pod -lapp=people
+----

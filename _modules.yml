@@ -10,14 +10,30 @@ config:
     value: apps.pro1.mattiamascia.com
     desc: OpenShift router domain
   - name: OCP_CONSOLE
-    value: console-openshift-console.apps.pro1.mattiamascia.com
+    value: https://console-openshift-console.apps.pro1.mattiamascia.com
     desc: OpenShift Console URL
   
 modules:
-  kafka:
-    name: Install a Kafka cluster
-  setup_quay:
+  kafka_intro:
+    name: About Kafka and Kafka Operator
+  kafka_resources:
+    name: Kafka Cluster, Topics, Producers and Consumers
+    vars:
+      OCP_CONSOLE:
+  kafka_quarkus:
+    name: Kafka Quarkus extension
+    vars:
+      OCP_CONSOLE:
+  setup_quay_operators:
     name: Setup your account in Quay
+    vars:
+      IMAGE_REGISTRY:
+  tekton:
+    name: Using Tekton Pipelines
+    vars:
+      IMAGE_REGISTRY:
+  setup_quay_tekton:
+    name: Configure Quay
     vars:
       IMAGE_REGISTRY:
   operators_go:

@@ -6,4 +6,6 @@ content:
 
 modules:
   activate:
-  - kafka
+  - kafka_intro
+  - kafka_resources
+  - kafka_quarkus

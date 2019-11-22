@@ -1,0 +1,10 @@
+id: "tekton-workshop"
+name: "Build and deploy your application using Tekton Pipelines"
+
+content:
+  url: https://raw.githubusercontent.com/radudd/workshopper-template/master
+
+modules:
+  activate:
+  - setup_quay_tekton
+  - tekton

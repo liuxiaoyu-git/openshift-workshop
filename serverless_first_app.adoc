@@ -2,7 +2,8 @@
 
 Now the fun begins. Let's create our first Serverless Service. Please make sure to be in the namespace assigned to your user - <myuser-namespace>. We will deploy a hello-world service.
 
-```
+[source,sh,role="copypaste"]
+----
 oc project <myuser-namespace>
 
 cat <<EOF > service.yaml
@@ -22,14 +23,15 @@ spec:
 EOF
 
 oc create -f service.yaml
-```
+----
 
 Besides some internal components for ServiceMesh and Serverless, this will deploy a Kubernetes Service and a Deployment. You can check this with the following commands.
 
-```
+[source,sh,role="copypaste"]
+----
 oc get deploy
 oc get svc
-```
+----
 
 Now let's go to the OpenShift Console and check there the deployed serverless components
 
@@ -41,25 +43,31 @@ As mentioned in the intro section, for a better experience using serverless work
 
 For deploying the same service using kn client, use the following command:
 
-```
-kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ                                                                   130 ↵
+[source,sh,role="copypaste"]
+----
+kn service create hello --image gcr.io/knative-samples/helloworld-go --env TARGET=Knativ
+----
+
+----
 Service 'hellos' successfully created in namespace '<myuser-namespace>'.
 Waiting for service 'hello' to become ready ... OK
 
 Service URL:
 http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
-```
+----
 
 Check the URL
 
-```
+[source,sh,role="copypaste"]
+----
 curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
-```
+----
 
 And then the pods
-```
+[source,sh,role="copypaste"]
+----
 oc get pods
-```
+----
 
 Now let's check the Developer Console in OpenShift https://{{ OCP_CONSOLE_URL }}/topology
 
@@ -71,14 +79,18 @@ Details about scaling to zero: Knative uses the config-autoscaler config map in 
 
 The values can be updated in the `config-autoscaler` ConfigMap. Check its content, it includes also some explanations
 
-`oc get configmap config-autoscaler -n knative-serving -o yaml`
+[source,sh,role="copypaste"]
+----
+oc get configmap config-autoscaler -n knative-serving -o yaml`
+----
 
 
 Now fire another request to the service 
 
-```
+[source,sh,role="copypaste"]
+----
 curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
-```
+----
 
 And switch to the Developer Console {{ OCP_CONSOLE_URL }}/topology
 

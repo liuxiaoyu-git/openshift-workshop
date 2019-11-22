@@ -2,38 +2,45 @@
 
 First let's list the Knative services deployed
 
-```
+[source,sh,role="copypaste"]
+----
 kn service list
-```
+----
 
 Then, let's update the service deployed earlier.
 
-```
+[source,sh,role="copypaste"]
+----
 kn service update hello --env TARGET=Kn
-```
+----
 
 Now do a GET request to the service. You will notice it got updated
 
-```
+[source,sh,role="copypaste"]
+----
 curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
-```
+----
 
 Each time a service gets updated, a new revision of is created with a new URL. That basically coincides with a creating a new Service and a new Deployment.
 
-```
+[source,sh,role="copypaste"]
+----
 oc get svc
 oc get deploy
-```
+----
 
 Check also the current revisions
 
-```
+[source,sh,role="copypaste"]
+----
 kn revision list
+----
 
+----
 NAME            SERVICE   GENERATION   AGE     CONDITIONS   READY   REASON
 hello-jlthg-2   hello     2            3m10s   3 OK / 4     True
 hello-chjnf-1   hello     1            36m     3 OK / 4     True
-```
+----
 
 
 ### Traffic
@@ -46,9 +53,10 @@ You can change this behavior by defining which revision gets a portion of the tr
 
 Now, let's route 10% of traffic to your new revision before putting all traffic on
 
-```
+[source,sh,role="copypaste"]
+----
 kn service update hello --traffic @latest=10 --traffic hello-jlthg-2=90
-```
+----
 
 Check the routes now
 
@@ -58,9 +66,10 @@ kn route list
 
 And performing a GET request. You'll notice the service is pointing to the old revision, because 90% is routing to that revision.
 
-```
+[source,sh,role="copypaste"]
+----
 curl  http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
-```
+----
 
 ### Tagging
 
@@ -68,17 +77,26 @@ A tag in a traffic block of service creates a custom URL, which points to a refe
 
 A given tag must be unique to its traffic block of the service. kn supports assigning and unassigning custom tags for revisions of services as part of the kn service update command
 
+[source,sh,role="copypaste"]
 ----
 kn service update hello --tag @latest=candidate --tag hello-chjnf-1=current 
 ----
 
 This commands creates two new routes based on the specified revisions. Let's check
 
+[source,sh,role="copypaste"]
 ----
 curl http://current-hello.<myuser-namespace>.{{OCP_DOMAIN}}        
+----
+----
 Hello Knativ!
+----
 
+[source,sh,role="copypaste"]
+----
 curl http://candidate-hello.<myuser-namespace>.{{OCP_DOMAIN}}
+----
+----
 Hello Kn!
 ----
 
@@ -91,6 +109,7 @@ The `minScale` and `maxScale` annotations can be used to configure the minimum a
 
 Let's create a new service using the concepts mentioned above.
 
+[source,sh,role="copypaste"]
 ----
 cat <<EOF | oc create -f -
 apiVersion: serving.knative.dev/v1alpha1
@@ -115,6 +134,7 @@ EOF
 
 The scaling parameters can be also defined using `kn` client.
 
+[source,sh,role="copypaste"]
 ----
 kn service create hello-scale --image gcr.io/knative-samples/helloworld-go \
    --concurrency-limit 10 \
@@ -124,12 +144,14 @@ kn service create hello-scale --image gcr.io/knative-samples/helloworld-go \
 ----
 
 After creating the service, let's check its status
+[source,sh,role="copypaste"]
 ----
 kn service list
 curl http://hello-scale.<myuser-namespace>.{{OCP_DOMAIN}}
 ----
 
 As `minScale` was set to 1, the deployment will always keep one running pod. Check the pods after 90 secods
+[source,sh,role="copypaste"]
 ----
 oc get pods
 ----
@@ -137,8 +159,6 @@ oc get pods
 
 #### Check HPA and generate some load
 ()
-
-* monitoring
 
 ### References
 

@@ -1,0 +1,287 @@
+=== Add Quarkus Kafka Extension
+
+With Kafka installing, turn your attention back to the app. Like other exercises, we'll need another extension to integrate with Kafka. Install it with:
+
+[source,sh,role="copypaste"]
+----
+mvn quarkus:add-extension -Dextensions="kafka"
+----
+
+This will add the necessary entries in your `pom.xml` to bring in the Kafka extension.
+
+=== The Application You Will Build
+
+The app consists of 3 components that pass messages via Kafka and an in-memory stream, then uses SSE to push messages to the browser. It looks like:
+
+image::kafkaarch.png[kafka, 800]
+
+=== Create name generator
+
+To start building the app, create a new Java class in the `org.acme.people.stream` called `NameGenerator`. This class will generate random names and publish them to our Kafka topic for further processing. Use this code:
+
+[source,java,role="copypaste"]
+----
+package org.acme.people.stream;
+
+import io.reactivex.Flowable;
+import javax.enterprise.context.ApplicationScoped;
+import org.acme.people.utils.CuteNameGenerator;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import java.util.concurrent.TimeUnit;
+
+@ApplicationScoped
+public class NameGenerator {
+
+    @Outgoing("generated-name")           // <1>
+    public Flowable<String> generate() {  // <2>
+        return Flowable.interval(5, TimeUnit.SECONDS)
+                .map(tick -> CuteNameGenerator.generate());
+    }
+
+}
+----
+<1> Instruct Reactive Messaging to dispatch the items from returned stream to `generated-name`
+<2> The method returns a RX Java 2 stream (Flowable) emitting a random name every 5 seconds
+
+The method returns a Reactive Stream. The generated items are sent to the stream named `generated-name`. This stream is mapped to Kafka using the application.properties file that we will create soon.
+
+=== Add honorifics
+
+The name converter reads the names from Kafka, and transforms them, adding a random (English) honorific to the beginning of the name.
+
+Create a new Java class in the same package called `NameConverter`. Use this code:
+
+[source,java,role="copypaste"]
+----
+package org.acme.people.stream;
+
+import javax.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import io.smallrye.reactive.messaging.annotations.Broadcast;
+
+@ApplicationScoped
+public class NameConverter {
+
+    private static final String[] honorifics = {"Mr.", "Mrs.", "Sir", "Madam", "Lord", "Lady", "Dr.", "Professor", "Vice-Chancellor", "Regent", "Provost", "Prefect"};
+
+    @Incoming("names")               // <1>
+    @Outgoing("my-data-stream")      // <2>
+    @Broadcast                       // <3>
+    public String process(String name) {
+        String honorific = honorifics[(int)Math.floor(Math.random() * honorifics.length)];
+        return honorific + " " + name;
+    }
+}
+----
+<1> Indicates that the method consumes the items from the `names` topic
+<2> Indicates that the objects returned by the method are sent to the `my-data-stream` stream
+<3> Indicates that the item are dispatched to all _subscribers_
+
+The process method is called for every Kafka record from the `names` topic (configured in the application configuration). Every result is sent to the my-data-stream in-memory stream.
+
+=== Expose to front end
+
+Finally, let’s bind our stream to a JAX-RS resource. Create a new Java class in the same package called `NameResource`. Use this code:
+
+[source,java,role="copypaste"]
+----
+package org.acme.people.stream;
+
+import io.smallrye.reactive.messaging.annotations.Channel;
+import org.reactivestreams.Publisher;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import org.jboss.resteasy.annotations.SseElementType;
+
+/**
+ * A simple resource retrieving the in-memory "my-data-stream" and sending the items as server-sent events.
+ */
+@Path("/names")
+public class NameResource {
+
+    @Inject
+    @Channel("my-data-stream") Publisher<String> names; // <1>
+
+    @GET
+    @Path("/stream")
+    @Produces(MediaType.SERVER_SENT_EVENTS)// <2>
+    @SseElementType("text/plain") // <3>
+    public Publisher<String> stream() { // <4>
+        return names;
+    }
+}
+----
+<1> Injects the `my-data-stream` stream using the `@Channel` qualifier
+<2> Indicates that the content is sent using _Server Sent Events_
+<3> Indicates that the data contained within the server sent events is of type `text/plain`
+<4> Returns the stream (Reactive Stream)
+
+[NOTE]
+====
+There is a pre-created `names.html` page for you to use (in the `src/main/resources/META-INF/resources` directory) which will make a request to this `/names/stream` endpoint using standard JavaScript running in the browser and draw the resulting names using the https://d3js.org/[D3.js library,window=_blank]. The JavaScript that makes this call looks like this (do not copy this into anything!):
+
+[source,javascript]
+----
+var source = new EventSource("/names/stream"); // <1>
+
+source.onmessage = function (event) { // <2>
+
+    console.log("received new name: " + event.data);
+    // process new name in event.data
+    // ...
+
+    // update the display with the new name
+    update(); // <3>
+};
+----
+<1> Uses your browser's support for the `EventSource` API (part of the W3C SSE standard) to call the endpoint
+<2> Each time a message is received via SSE, _react_ to it by running this function
+<3> Refresh the display using the D3.js library
+
+====
+
+=== Configure application
+
+We need to configure the Kafka connector. This is done in the `application.properties` file (in the `src/main/resources` directory). The keys are structured as follows:
+
+`mp.messaging.[outgoing|incoming].{channel-name}.property=value`
+
+The `channel-name` segment must match the value set in the `@Incoming` and `@Outgoing` annotation:
+
+* `generated-name` → sink to which we write the names
+* `names` → source from which we read the names
+
+Add the following values to the `application.properties`:
+
+[source,none,role="copypaste"]
+----
+# Configure the Kafka sink (we write to it)
+%prod.mp.messaging.outgoing.generated-name.bootstrap.servers=names-cluster-kafka-bootstrap:9092<1>
+%prod.mp.messaging.outgoing.generated-name.connector=smallrye-kafka
+%prod.mp.messaging.outgoing.generated-name.topic=names
+%prod.mp.messaging.outgoing.generated-name.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+
+# Configure the Kafka source (we read from it)
+%prod.mp.messaging.incoming.names.bootstrap.servers=names-cluster-kafka-bootstrap:9092<1>
+%prod.mp.messaging.incoming.names.connector=smallrye-kafka
+%prod.mp.messaging.incoming.names.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+----
+<1> The hostnames you see here will only make sense (be resolvable via DNS) when this app is run in the same Kubernetes namespace as the Kafka cluster you created earlier. So you'll see this and other config values above prefixed with `%prod` which will not try to initialize Kafka when in `dev` mode.
+
+More details about this configuration is available on the https://kafka.apache.org/documentation/#producerconfigs[Producer configuration] and https://kafka.apache.org/documentation/#consumerconfigs[Consumer configuration,window=_blank] section from the Kafka documentation.
+
+[NOTE]
+====
+What about `my-data-stream`? This is an in-memory stream, not connected to a message broker.
+====
+
+=== Verify Kafka is running
+
+Verify that the Kafka and Zookeeper pods finally started up by running this command:
+
+[source,sh,role="copypaste"]
+----
+oc get pods|grep names-cluster
+----
+
+You'll should see all pods up and `Running`:
+
+[source,none]
+----
+names-cluster-entity-operator-78686cdd4d-rfkwd   3/3     Running   0          6m50s
+names-cluster-kafka-0                            2/2     Running   0          7m41s
+names-cluster-kafka-1                            2/2     Running   0          7m41s
+names-cluster-kafka-2                            2/2     Running   1          7m41s
+names-cluster-zookeeper-0                        2/2     Running   0          8m31s
+names-cluster-zookeeper-1                        2/2     Running   0          8m31s
+names-cluster-zookeeper-2                        2/2     Running   0          8m31s
+----
+
+If some of them are still starting, you'll need to wait for them! Run the `oc get pods | grep names-cluster` command repeatedly until they are running. This should take no more than 1-2 minutes.
+
+
+=== Rebuild Executable JAR
+
+From command line:
+
+----
+mvn package -Pnative -Dquarkus.native.container-build=true
+oc new-build quay.io/quarkus/ubi-quarkus-native-binary-s2i:19.2.1 --binary --name=people -l app=people
+----
+
+You should see a bunch of log output that ends with a `SUCCESS` message.
+
+=== Deploy to OpenShift
+
+NOTE: Replace your <username> with your assigned username.
+
+First commit your code to Gogs.
+
+[source,sh,role="copypaste"]
+----
+git add -A
+git commit -m "Kafka connector"
+git push origin master
+----
+
+Then build with OpenShift
+
+[source,sh,role="copypaste"]
+----
+oc new-build https://gogs.apps.ocp.bdmsky.net/<username>/quarkus-workshop.git --docker-image quay.io/quarkus/ubi-quarkus-native-s2i:19.2.1 --name people -l app=people
+----
+
+The build should take a minute or two to complete.
+
+Next deploy your app.
+
+[source,sh,role="copypaste"]
+----
+oc new-app --image-stream people:latest
+----
+
+And expose the route
+
+[source,sh,role="copypaste"]
+----
+oc expose svc/people
+----
+
+=== Test
+
+Our application should be up and running in a few seconds after the build completes and generating names. To see if it's working, run this command in a Terminal to generate the URL to the sample visualization of the stream of names being generated:
+
+[source,sh,role="copypaste"]
+----
+echo; echo http://$(oc get route people --template='{{ .spec.host }}'/names.html ; echo
+----
+
+Open a separate browser tab and go to that URL and you should see a cloud of names updating every 5 seconds (it may take a few seconds for it to start!):
+
+[NOTE]
+====
+It takes a few seconds to establish the connection to Kafka. If you don't see new names generated every 5 seconds, reload the browser page to re-initialize the SSE stream.
+====
+
+image::names.png[names,800]
+
+These are the original names streamed through Kafka, altered to add a random honorific like "Sir" or "Madam", and displayed in a "word cloud" for you to enjoy!
+
+=== Cleanup
+
+Now let's cleanup our application.
+
+[source,sh,role="copypaste"]
+----
+oc delete all -l app=people
+----
+
+=== Congratulations!
+
+This guide has shown how you can interact with Kafka using Quarkus. It utilizes MicroProfile Reactive Messaging to build data streaming applications.
+
+If you want to go further check the documentation of https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging,window=_blank], the implementation used in Quarkus.
