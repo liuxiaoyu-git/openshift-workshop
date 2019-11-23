@@ -1,13 +1,13 @@
-=== Getting Started with Quarkus
+= Getting Started with Quarkus
 :experimental:
 
 In this exercise
 
-=== What is Cloud Native?
+== What is Cloud Native?
 
-=== What is Quarkus?
+== What is Quarkus?
 
-=== The Goal
+== The Goal
 
 In this exercise,
 
