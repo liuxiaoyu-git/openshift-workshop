@@ -1,0 +1,11 @@
+id: "cloud-native"
+name: "Quarkus Hands-on Lab"
+
+content:
+  url: https://raw.githubusercontent.com/radudd/workshopper-template/master
+
+modules:
+  activate:
+  - first_touch
+  - quarkus
+  - quarkus_health
