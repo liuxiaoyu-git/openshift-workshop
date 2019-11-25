@@ -16,14 +16,11 @@ config:
     value: https://gogs.apps.ocp.bdmsky.net
     desc: Git Server
   - name: GIT_USER
-    value: <your-user>
+    value: userXY
     desc: Git user
   - name: GIT_REPO
-    value: <your-repo>
-    desc: Git user
-  - name: USER_PROJECT
-    value: <your-project>
-    desc: User project
+    value: '<your-repo>'
+    desc: Git repo
   
 modules:
   cloud_native_intro:

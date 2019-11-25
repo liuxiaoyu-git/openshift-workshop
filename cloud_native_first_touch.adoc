@@ -153,7 +153,7 @@ Logged into "https://api.pro.openlab.red:6443" as ... using the token provided.
 Create a new project
 [source, bash]
 ----
-odo project create {{USER_PROJECT}}
+odo project create {{USER_NAMESPACE}}
 ----
 
 Change the current directory to the build directory:
