@@ -91,6 +91,24 @@ Don't worry if they're not all in the _Running_ status, they will eventually com
 
 === Test sending messages
 
+In the Kafka cluster we created, we have configured no authentication for the `plain` and `tls` listeners and mTLS authentication for the `external` listener.
+
+`plain` and `tls` listeners are used for internal communication, while the as the name implies the `external` listener is externally exposed using an OpenShift Route.
+
+Recall the Kafka CR:
+
+----
+    listeners:
+      external:
+        type: route
+        authentication:
+          type: tls
+      plain: {}
+      tls: {}
+----
+
+In the next two sections we will producing and receiving messages both inside the cluster using internal listener, as well as external communication the cluster using mTLS. 
+
 ==== Inside cluster
 
 Launch Producer
@@ -106,6 +124,16 @@ oc -n <myuser-namespace> run kafka-consumer -ti --image=strimzi/kafka:0.14.0-kaf
 ----
 
 ==== Outside cluster using mTLS (Optional) 
+
+To test producing and consuming messages outside cluster, we will need to install Kafka binaries.
+
+[source,sh,role="copypaste"]
+----
+curl -O http://www.pirbot.com/mirrors/apache/kafka/2.3.1/kafka_2.12-2.3.1.tgz
+tar zxvf kafka_2.12-2.3.1.tgz
+ln -s kafka_2.12-2.3.1 kafka 
+----
+
 
 Create a truststore containing Kafka CA certificates
 
@@ -139,15 +167,6 @@ Create a keystore with the client certificates required by mTLS
 oc extract secret/test --keys=user.crt --to=- > user.crt
 oc extract secret/test --keys=user.key --to=- > user.key
 openssl pkcs12 -export -in user.crt -inkey user.key -name test -password pass:123456 -out user.p12
-----
-
-Now you'll need to download Kafka binaries
-
-[source,sh,role="copypaste"]
-----
-curl -O http://www.pirbot.com/mirrors/apache/kafka/2.3.1/kafka_2.12-2.3.1.tgz
-tar zxvf kafka_2.12-2.3.1.tgz
-ln -s kafka_2.12-2.3.1 kafka 
 ----
 
 Obtain the Kafka bootstrap route
