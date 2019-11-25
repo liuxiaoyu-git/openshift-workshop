@@ -5,7 +5,10 @@ In this step, you will create a straightforward application from an existing bas
 
 == Import new project
 
+[NOTE]
+====
 In Code Ready, the project has been already cloned for you
+====
 
 On your local environment please clone the following github repo
 
