@@ -15,7 +15,7 @@ Cloud-native development is just that—an approach to building and updating app
 
 == What is Quarkus?
 
-image::logo.png[]
+image::quarkus.png[]
 
 It's Supersonic Subatomic Java!
 
