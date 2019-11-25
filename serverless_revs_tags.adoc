@@ -102,7 +102,8 @@ Hello Kn!
 
 ### Scale out
 
-Scaling achieved using Knative Serving Autoscaler. This is Kubernetes Deployment running a single Pod which watches request load on the Pods running user code. It increases and decreases the size of the Deployment running the user code in order to compensate for higher or lower traffic load.
+Scaling is achieved using Knative Serving Autoscaler. 
+The component is watching request load on the Pods running user code. It increases and decreases the size of the Deployment running the user code in order to compensate for higher or lower traffic load.
 
 You can specify the number of concurrent requests that should be handled by each instance of an application (revision container) by adding the  `target`  annotation or the  `containerConcurrency`  field in the revision template.
 The `minScale` and `maxScale` annotations can be used to configure the minimum and maximum number of Pods that can serve applications. These annotations can be used to prevent cold starts or to help control computing costs. Using these annotations in the revision template will propagate this confguration to PodAutoscaler objects.
@@ -134,7 +135,9 @@ EOF
 
 The scaling parameters can be also defined using `kn` client.
 
-Because the scaling decision is based on the average number of in-flight requests per pod, in order to demonstrate scale-out we will create a service that answers to a request after 4 seconds. 
+Because the scaling decision is based on the average number of in-flight requests per pod, in order to demonstrate scale-out we will create a define that answers to a request after 4 seconds. 
+
+The implementation in Python Flask would like like below:
 
 [source,python]
 ----
