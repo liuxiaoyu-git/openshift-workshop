@@ -10,20 +10,20 @@ In order to create the repositories, please follow the steps below.
 
 * Next, create the repositories. They should be called _go-operator_ and _ansible-operator_. For the purpose of this lab, make the repositories public.
 
-image::quay1a.png[quay1a,150]
-image::quay1b.png[quay1b,150]
+image::quay1a.png[quay1a,300]
+image::quay1b.png[quay1b,300]
 
 * Then go to _Account settings_ (click on your username top right first) and then click on _Robot_ icon from the left panel. Create a new Robot account, called _generic_
 
-image::quay2.png[quay2,150]
+image::quay2.png[quay2,300]
 
 * You will be then prompted to provide permissions for the repositories you created. Select the two repos created earlier and provide the Robot account write permissions to them.
 
-image::quay3.png[quay3,150]
+image::quay3.png[quay3,300]
 
 * Still on the Robot screen, click on the wheel from the end of the line corresponding to your account and then on _View Credentials_. You will get the docker command to login to the registry using the robot account.
 
-image::quay4.png[quay4,150]
+image::quay4.png[quay4,300]
 
 ```
 docker login -u="radudd+generic" -p="xxxxxx" {{IMAGE_REGISTRY}}
