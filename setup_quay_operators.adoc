@@ -1,18 +1,29 @@
 ### Creating an account and repositories in Quay
 
-For this lab, we'll use the internal Quay registry. Quay is configured to use Red Hat SSO for authentication.
+For this lab, we'll need to create two container image repositories for storing the images for the operators we will develop. We will be using the on-prem Quay installation for this.
+
+In order to create the repositories, please follow the steps below.
 
 #### Steps
 
-* Open https://{{IMAGE_REGISTRY}} in a browser and login using Red Hat SSO and GitHub IDP. If you don't have GitHub account, please use one of the user provided.
+* Open https://{{IMAGE_REGISTRY}} in a browser and login using Red Hat SSO. Confirm your username in Quay.
 
-* After logging in with SSO, Quay will create an user for you. Now you'll need to create two new repositories, one should be called _go-operator_ and the other _ansible-operator_. For the purpose of this lab, make them public.
+* Next, create the repositories. They should be called _go-operator_ and _ansible-operator_. For the purpose of this lab, make the repositories public.
 
-* Go to _Account settings_ (top right) and click on _Robot_ icon from the left panel. Create a new Robot account, called _generic_
+image::quay1a.png[]
+image::quay1b.png[]
 
-* You will be prompted to provide permissions for the repositories you created. Select the two repos created earlier and provide the Robot account write permissions to them.
+* Then go to _Account settings_ (click on your username top right first) and then click on _Robot_ icon from the left panel. Create a new Robot account, called _generic_
+
+image::quay2.png[]
+
+* You will be then prompted to provide permissions for the repositories you created. Select the two repos created earlier and provide the Robot account write permissions to them.
+
+image::quay3.png[]
 
 * Still on the Robot screen, click on the wheel from the end of the line corresponding to your account and then on _View Credentials_. You will get the docker command to login to the registry using the robot account.
+
+image::quay4.png[]
 
 ```
 docker login -u="radudd+generic" -p="xxxxxx" {{IMAGE_REGISTRY}}
