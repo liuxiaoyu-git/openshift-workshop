@@ -71,7 +71,7 @@ oc get pods
 
 Now let's check the Developer Console in OpenShift https://{{ OCP_CONSOLE_URL }}/topology
 
-image::serverless-2.png[]
+image::serverless-2.png[serverless-2,200]
 
 You'll notice that the Deployment autoscales(or already autoscaled) to 0 pods because no traffic was sent in the last 90 seconds.
 
@@ -94,7 +94,7 @@ curl http://hello.<myuser-namespace>.{{OCP_DOMAIN}}
 
 And switch to the Developer Console {{ OCP_CONSOLE_URL }}/topology
 
-image::serverless-3.png[]
+image::serverless-3.png[serverless-3,200]
 
 As you can already imagine, the autoscaler scaled the deployment to 1 and answered to the request.
 

@@ -1,4 +1,4 @@
-### Getting an account and creating repositories on Quay
+### Creating an account and repositories in Quay
 
 For this lab, we'll use the internal Quay registry. Quay is configured to use Red Hat SSO for authentication.
 

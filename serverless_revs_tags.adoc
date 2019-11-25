@@ -102,7 +102,8 @@ Hello Kn!
 
 ### Scale out
 
-Scaling achieved using Knative Serving Autoscaler. This is Kubernetes Deployment running a single Pod which watches request load on the Pods running user code. It increases and decreases the size of the Deployment running the user code in order to compensate for higher or lower traffic load.
+Scaling is achieved using Knative Serving Autoscaler. 
+The component is watching request load on the Pods running user code. It increases and decreases the size of the Deployment running the user code in order to compensate for higher or lower traffic load.
 
 You can specify the number of concurrent requests that should be handled by each instance of an application (revision container) by adding the  `target`  annotation or the  `containerConcurrency`  field in the revision template.
 The `minScale` and `maxScale` annotations can be used to configure the minimum and maximum number of Pods that can serve applications. These annotations can be used to prevent cold starts or to help control computing costs. Using these annotations in the revision template will propagate this confguration to PodAutoscaler objects.
@@ -134,32 +135,54 @@ EOF
 
 The scaling parameters can be also defined using `kn` client.
 
+Because the scaling decision is based on the average number of in-flight requests per pod, in order to demonstrate scale-out we will create a define that answers to a request after 4 seconds. 
+
+The implementation in Python Flask would like like below:
+
+[source,python]
+----
+@app.route('/')
+def hello_world():
+    sleep(4)
+    return 'Hello World!'
+----
+
+In this way we will have a larger time window to generate more requests than the `concurrency-limit` and the HPA will be triggered.
+
 [source,sh,role="copypaste"]
 ----
-kn service create hello-scale --image gcr.io/knative-samples/helloworld-go \
-   --concurrency-limit 10 \
+kn service create hello-sleep --image docker.io/meteatamel/sleepingservice:v1
+   --concurrency-limit 5 \
    --min-scale 1 \
-   --max-scale 100 \
-   --env TARGET=Knativ 
+   --max-scale 15 
 ----
 
 After creating the service, let's check its status
 [source,sh,role="copypaste"]
 ----
 kn service list
-curl http://hello-scale.<myuser-namespace>.{{OCP_DOMAIN}}
+curl http://hello-sleep.<myuser-namespace>.{{OCP_DOMAIN}}
 ----
 
-As `minScale` was set to 1, the deployment will always keep one running pod. Check the pods after 90 secods
+Now let's generate some requests 
 [source,sh,role="copypaste"]
 ----
-oc get pods
+seq 1 400 | xargs -n1 -P30  curl http://hello-sleep.serverless.apps.ocp.bdmsky.net
 ----
 
+You'll notice plenty of response errors, as the  service is not able to handle so many requests.
 
-#### Check HPA and generate some load
-()
+----
+Hello World!curl: (7) Couldn't connect to serverHello World!Hello World!curl: (7) Couldn't connect to servercurl: (7) Couldn't connect to serverHello World!Hello World!ccuurrll::  ((77))  CCoouullddnn''tt  ccoonnnneecctt  ttoo  sseerrvveerrHello World!Hello World!Hello World!curl: (7) Couldn't connect to servercurl: (7) Couldn't connect to servceurrl: (7) Couldn't connect to serverHello World!Hello World!curl: (7) Couldn't connect to servercurl: (7) Couldn't connect to serverHello World!Hello World!Hello World!Hello World!ccurlc:uur r(ll:7: )  ((C77o))u  lcCoduldCno'ut clodnn'nte ccto ntnoe cste rtvoe rservern't connect to serverurl
+----
+
+Now, go {{OCP_CONSOLE}}/topology[OpenShift Console], go to the Developer console and navigate to your project. On topology, click on your application. You'll notice that it started to scale out (in this example to 9 pods).
+
+image::serverless-4.png[]
+
+Now interrupt the curl request. After a while, the deployment will start to scale down. As `minScale` was set to 1, the deployment will always keep one running pod.
 
 ### References
 
 * https://github.com/knative/serving/blob/master/docs/scaling/DEVELOPMENT.md
+* https://github.com/meteatamel/knative-tutorial/
