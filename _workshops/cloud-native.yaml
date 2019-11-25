@@ -6,6 +6,7 @@ content:
 
 modules:
   activate:
+  - intro
   - first_touch
   - quarkus
   - quarkus_health

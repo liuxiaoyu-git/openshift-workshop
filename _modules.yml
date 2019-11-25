@@ -14,6 +14,8 @@ config:
     desc: OpenShift Console URL
   
 modules:
+  intro:
+    name: Cloud Native Application with Quarkus
   first_touch:
     name: Getting Started with Quarkus
   quarkus:

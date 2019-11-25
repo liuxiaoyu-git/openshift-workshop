@@ -1,13 +1,162 @@
 = Getting Started with Quarkus
 :experimental:
 
-In this exercise
+In this step, you will create a straightforward application from https://code.quarkus.io
 
-== What is Cloud Native?
+== Start Coding
 
-== What is Quarkus?
+Enter on your browser https://code.quarkus.io
+This page will help you bootstrap your Quarkus application and discover its extension ecosystem.
 
-== The Goal
+Think of Quarkus extensions as your project dependencies. Extensions configure, boot and integrate a framework or technology into your Quarkus application. They also do all of the heavy lifting of providing the right information to GraalVM for your application to compile natively.
 
-In this exercise,
+Explore the wide breadth of technologies Quarkus applications can be made with. Generate your application!
+
+image::code.quarkus.png[]
+
+
+* Set package name.
+* Set artifact name.
+* Click Generate your application to download your bootstrap Quarkus code.
+
+== Explore Quarkus Code
+
+The project has
+
+* The Maven structure
+* An `org.acme.ExampleResource` resource exposed on `/hello`, along with a simple test
+* A landing page that is accessible on `http://localhost:8080` after starting the application
+* The application configuration file
+
+Next, double-click on `pom.xml` in the project browser to open it in the editor. You will find the import of the Quarkus BOM, allowing to omit the version on the different Quarkus dependencies. In addition, you can see the `quarkus-maven-plugin` responsible of the packaging of the application and also providing the development mode.
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-bom</artifactId>
+            <version>${quarkus.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+And a few more `<dependency>` imports and other ancillary sections. We will be adding things to our `pom.xml` in future sections.
+
+Navigate to `src -> main -> java -> org.acme` in the project tree and double click on `ExampleResource.java`. This class has a very simple RESTful endpoint definition:
+
+[source, java]
+----
+@Path("/hello")
+public class GreetingResource {
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        return "hello";
+    }
+}
+----
+
+It’s a very simple REST endpoint, returning "hello" to requests on `/hello`.
+
+[NOTE]
+====
+Compared to vanilla JAX-RS, with Quarkus there is no need to create an `Application` class. It’s supported but not required. In addition, only one instance of the resource is created and not one per request. You can configure this using the different `*Scoped` annotations (`ApplicationScoped`, `RequestScoped`, etc).
+====
+
+== Running the Application in Live Coding Mode
+
+**Live Coding** (also referred to as _dev mode_) allows us to run the app and make changes on the fly. Quarkus will automatically re-compile and reload the app when changes are made. This is a powerful and effecient style of developing that you will use throughout the lab.
+
+In Che, select the _Command Palette_ by clicking on its icon in the upper right, and double-click on **Start Live Coding**:
+
+This will compile and run the app using `mvn compile quarkus:dev` in a Terminal window. Leave this terminal window open throughout the lab! You can complete the entire lab without shutting down Quarkus Live Coding mode. This is very useful for quick expermentation.
+
+== Deploy in OpenShift with Odo
+
+OpenShift Do (`odo`) is a fast, iterative, and straightforward CLI tool for developers who write, build, and deploy applications on OpenShift.
+
+Existing tools such as `oc` are more operations-focused and require a deep-understanding of Kubernetes and OpenShift concepts. `odo` abstracts away complex Kubernetes and OpenShift concepts for the developer, thus allowing developers to focus on what is most important to them: code.
+
+[[key-features]]
+=== Key features
+
+`odo` is designed to be simple and concise with the following key features:
+
+* Simple syntax and design centered around concepts familiar to developers, such as project, application, and component.
+* Completely client based. No server is required within the OpenShift cluster for deployment.
+* Supports multiple languages and frameworks such as Node.js, Java, Ruby, Perl, PHP, and Python.
+* Detects changes to local code and deploys it to the cluster automatically, giving instant feedback to validate changes in real-time.
+* Lists all available components and services from the OpenShift cluster.
+
+=== Build the Application
+
+[source, bash]
+----
+mvn package -P native
+----
+
+=== Create the application with Odo
+
+* Create a new project
+[source, bash]
+----
+odo project create {{user-project}}
+----
+
+Change the current directory to the build directory:
+
+[source, bash]
+----
+cd target/code-with-quarkus-1.0.0-SNAPSHOT-native-image-source-jar
+----
+
+Add a component of the type Java to your application:
+
+[source, bash]
+----
+odo create java:8 app
+----
+
+Review the component configuration
+[source, bash]
+----
+odo config view
+----
+
+Push the initial source code to the component:
+[source, bash]
+----
+odo push
+----
+
+Retrieve and follow the log for the given component
+[source, bash]
+----
+odo log -f
+----
+
+Create a URL and add an entry in the local configuration file as follows
+
+[source, bash]
+----
+odo url create app --port 8080
+[source, bash]
+----
+
+* Push the changes. This creates a URL on the cluster.
+[source, bash]
+----
+odo push
+----
+
+== Congratulations!
+
+You've seen how to build a basic app, package it as an executable JAR and start it up very quickly and how to deploy in OpenShift with Odo in a few clicks.
+
 

@@ -1,0 +1,28 @@
+= Cloud Native Application with Quarkus
+:experimental:
+
+== What is Cloud Native?
+
+image::cncf.png[]
+
+Cloud-native applications are a collection of small, independent, and loosely coupled services. They are designed to deliver well recognized business value, like the ability to rapidly incorporate user feedback for continuous improvement. In short, cloud-native app development is a way to speed up how you build new applications, optimize existing ones, and connect them all together. Its goal is to deliver apps users want at the pace a business needs.
+
+If an app is "cloud-native," it’s specifically designed to provide a consistent development and automated management experience across private, public, and hybrid clouds. Organizations adopt cloud computing to increase the scalability and availability of apps. These benefits are achieved through self-service and on-demand provisioning of resources, as well as automating the application life cycle from development to production.
+
+But to fully utilize these benefits, a new form of application development is needed.
+
+Cloud-native development is just that—an approach to building and updating apps quickly, while improving quality and reducing risk. More specifically, it’s a way to build and run responsive, scalable, and fault-tolerant apps anywhere—whether in public, private, or hybrid clouds.
+
+== What is Quarkus?
+
+image::logo.png[]
+
+It's Supersonic Subatomic Java!
+
+Quarkus is a Kubernetes Native Java framework tailored for GraalVM and HotSpot, crafted from best-of-breed Java libraries and standards.
+
+The goal of Quarkus is to make Java a leading platform in Kubernetes and serverless environments while offering developers a unified reactive and imperative programming model to optimally address a wider range of distributed application architectures.
+
+Amazingly fast boot time, incredibly low RSS memory (not just heap size!) offering near instant scale up and high density memory utilization in container orchestration platforms like Kubernetes. Quarkus uses a technique called https://quarkus.io/vision/container-first[compile time boot,window=_blank] and offers a unified imperative and reactive programming model and a number of other developer features like Live Reload to bring _real joy_ to your development.
+
+Throughout this lab you'll discover how Quarkus can make your development of cloud native apps faster and more productive.
