@@ -196,7 +196,7 @@ odo url create app --port 8080
 [source, bash]
 ----
 
-* Push the changes. This creates a URL on the cluster.
+Push the changes. This creates a URL on the cluster.
 [source, bash]
 ----
 odo push
