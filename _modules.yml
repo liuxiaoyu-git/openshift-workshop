@@ -26,13 +26,13 @@ config:
     desc: User project
   
 modules:
-  cloud-native_intro:
+  cloud_native_intro:
     name: Cloud Native Application with Quarkus
-  cloud-native_first_touch:
+  cloud_native_first_touch:
     name: Getting Started with Quarkus
-  cloud-native_quarkus:
+  cloud_native_quarkus:
     name: Building Native Quarkus Apps
-  cloud-native_quarkus_health:
+  cloud_native_quarkus_health:
     name: Developing Cloud Native with Quarkus
   kafka_intro:
     name: About Kafka and Kafka Operator
