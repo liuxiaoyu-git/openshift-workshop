@@ -6,30 +6,20 @@ In this section, we will check the components of ServiceMesh and Serverless.
 
 #### ServiceMesh
 
-The control plane needs to run in `istio-system` namespace. 
+The control plane is installed automatically by Service Mesh operator in `knative-serving-ingress` namespace. 
 
-Let's first check the custom resources. The first one is called ServiceMeshControlPlane and is used by service mesh to deploy the control plane. You can inspect with the following command:
-
-[source,sh,role="copypaste"]
-----
-oc describe servicemeshcontrolplane basic-install
-----
-
-The second resource required by Service Mesh is called ServiceMeshMemberRoll.
-You must have a Service Mesh Member Roll for the control plane namespace, if the Service Mesh is configured for multi-tenancy. For applications to use the deployed control plane and ingress, their namespaces must be part of a member roll.
+Let's check the Control Plane custom resource.
 
 [source,sh,role="copypaste"]
 ----
-oc describe ServiceMeshMemberRoll default
+oc describe servicemeshcontrolplane -n knative-serving-ingress
 ----
-
-The namespaces where we'll test the serverless application needs to be part of members array!
 
 Let's now check the deployed pods of the Control Plane:
 
 [source,sh,role="copypaste"]
 ----
-oc get pod -n istio-system
+oc get pod -n knative-serving-ingress
 ----
 
 ----
