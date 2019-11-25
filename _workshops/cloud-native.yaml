@@ -6,7 +6,7 @@ content:
 
 modules:
   activate:
-  - intro
-  - first_touch
-  - quarkus
-  - quarkus_health
+  - cloud-native_intro
+  - cloud-native_first_touch
+  - cloud-native_quarkus
+  - cloud-native_quarkus_health
