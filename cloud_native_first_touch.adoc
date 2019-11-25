@@ -12,7 +12,7 @@ Think of Quarkus extensions as your project dependencies. Extensions configure, 
 
 Explore the wide breadth of technologies Quarkus applications can be made with. Generate your application!
 
-image::code.quarkus.png[]
+image::code-quarkus.png[]
 
 
 * Set package name.

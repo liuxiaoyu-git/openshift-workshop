@@ -3,7 +3,7 @@
 
 == What is Cloud Native?
 
-image::cncf.png[]
+image::cncf.png[cncf,100]
 
 Cloud-native applications are a collection of small, independent, and loosely coupled services. They are designed to deliver well recognized business value, like the ability to rapidly incorporate user feedback for continuous improvement. In short, cloud-native app development is a way to speed up how you build new applications, optimize existing ones, and connect them all together. Its goal is to deliver apps users want at the pace a business needs.
 
