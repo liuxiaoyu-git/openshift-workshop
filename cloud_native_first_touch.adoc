@@ -28,7 +28,7 @@ Create a git repository on the central git server {{GIT_SERVER}}.
 For the purpose of this demo, make the repository public
 ====
 
-image::git.newrepo.png[]
+image::git-newrepo.png[]
 
 Clone the repository on your local machine.
 
@@ -43,7 +43,7 @@ git push -u origin master
 
 Open the terminal and select container **tools** from Code Ready and clone inside the projects directory.
 
-image::codeready.openterminal.png[]
+image::codeready-openterminal.png[]
 
 [source,bash]
 ----
@@ -138,16 +138,16 @@ Login to the cluster by command line.
 
 From Web Console click "Copy Login Command"
 
-image::oc.login.png[]
+image::oc-login.png[]
 
 Authenticate and later click Display Token
 
-image::oc.token.png[]
+image::oc-token.png[]
 
 Copy the **oc** command and paste it to the terminal, if successful you should see.
 [source, bash]
 ----
-Logged into "https://api.pro.openlab.red:6443" as ... using the token provided.
+Logged into "https://api.{{OCP_DOMAIN}}:6443" as ... using the token provided.
 ----
 
 Create a new project
@@ -196,7 +196,7 @@ odo url create app --port 8080
 [source, bash]
 ----
 
-* Push the changes. This creates a URL on the cluster.
+Push the changes. This creates a URL on the cluster.
 [source, bash]
 ----
 odo push

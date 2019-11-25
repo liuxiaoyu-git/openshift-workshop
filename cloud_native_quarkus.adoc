@@ -5,7 +5,10 @@ In this step, you will create a straightforward application from an existing bas
 
 == Import new project
 
+[NOTE]
+====
 In Code Ready, the project has been already cloned for you
+====
 
 On your local environment please clone the following github repo
 
@@ -16,7 +19,7 @@ git clone https://github.com/openlab-red/quarkus-workshop-labs
 
 == Add Remote git server
 
-Create a quarkus-workshop-labs on the central git server {{GIT_SERVER}}
+Create a **quarkus-workshop-labs** on the central git server {{GIT_SERVER}}
 
 [NOTE]
 ====
@@ -33,21 +36,61 @@ git push -u origin master
 
 == Build Native with OpenShift s2i
 
+Create a new OpenShift Build binary type
+
 [source,none,role="copypaste"]
 ----
 oc new-build {{GIT_SERVER}}/{{GIT_USER}}/quarkus-workshop-labs.git --docker-image quay.io/quarkus/ubi-quarkus-native-s2i:19.2.1 --name quarkus-s2i-src -l app=quarkus-s2i-src
+----
+
+Deploy your application
+
+[source,none,role="copypaste"]
+----
 oc new-app --image-stream quarkus-s2i-src:latest
+----
+
+Create a route to expose your application
+
+[source,none,role="copypaste"]
+----
 oc expose service quarkus-s2i-src
 ----
 
 == Build binary with OpenShift from local  (require graalvm) or CodeReady
 
+Build Native
+
 [source,none,role="copypaste"]
 ----
 mvn package -Pnative -Dquarkus.native.container-build=true
+----
+
+Create a new OpenShift Build binary type
+
+[source,none,role="copypaste"]
+----
 oc new-build quay.io/quarkus/ubi-quarkus-native-binary-s2i:19.2.1 --binary --name=quarkus-s2i-bin -l app=quarkus-s2i-bin
+----
+
+Start OpenShift Build from file
+
+[source,none,role="copypaste"]
+----
 oc start-build quarkus-s2i-bin --from-file target/*-runner
+----
+
+Deploy your application
+
+[source,none,role="copypaste"]
+----
 oc new-app --image-stream quarkus-s2i-bin:latest
+----
+
+Create a route to expose your application
+
+[source,none,role="copypaste"]
+----
 oc expose service quarkus-s2i-bin
 ----
 
