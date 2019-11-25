@@ -12,6 +12,18 @@ config:
   - name: OCP_CONSOLE
     value: https://console-openshift-console.apps.pro1.mattiamascia.com
     desc: OpenShift Console URL
+  - name: GIT_SERVER
+    value: https://gogs.apps.ocp.bdmsky.net
+    desc: Git Server
+  - name: GIT_USER
+    value: <your-user>
+    desc: Git user
+  - name: GIT_REPO
+    value: <your-repo>
+    desc: Git user
+  - name: USER_PROJECT
+    value: <your-project>
+    desc: User project
   
 modules:
   intro:

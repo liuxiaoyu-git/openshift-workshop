@@ -19,6 +19,37 @@ image::code.quarkus.png[]
 * Set artifact name.
 * Click Generate your application to download your bootstrap Quarkus code.
 
+== Import the bootstrap code in CodeReady.
+
+Create a git repository on the central git server {{GIT_SERVER}}.
+
+[NOTE]
+====
+For the purpose of this demo, make the repository public
+====
+
+image::git.newrepo.png[]
+
+Clone the repository on your local machine.
+
+[source,bash]
+----
+git init
+git add --all
+git commit -m "first commit"
+git remote add origin {{GIT_SERVER}}/{{GIT_USER}}/{{GIT_REPO}}.git
+git push -u origin master
+----
+
+Open the terminal and select container **tools** from Code Ready and clone inside the projects directory.
+
+image::codeready.openterminal.png[]
+
+[source,bash]
+----
+git clone {{GIT_SERVER}}/{{GIT_USER}}/{{GIT_REPO}}.git
+----
+
 == Explore Quarkus Code
 
 The project has
@@ -103,10 +134,26 @@ mvn package -P native
 
 === Create the application with Odo
 
-* Create a new project
+Login to the cluster by command line.
+
+From Web Console click "Copy Login Command"
+
+image::oc.login.png[]
+
+Authenticate and later click Display Token
+
+image::oc.token.png[]
+
+Copy the **oc** command and paste it to the terminal, if successful you should see.
 [source, bash]
 ----
-odo project create {{user-project}}
+Logged into "https://api.pro.openlab.red:6443" as ... using the token provided.
+----
+
+Create a new project
+[source, bash]
+----
+odo project create {{USER_PROJECT}}
 ----
 
 Change the current directory to the build directory:
