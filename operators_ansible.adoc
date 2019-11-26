@@ -11,9 +11,9 @@
 
 Go to workspace settings:
 
-images::workspace0[]
+image::workspace0.png[]
 
-images::workspace01[]
+image::workspace01.png[]
 
 ----
   - mountSources: true
@@ -29,11 +29,11 @@ This will startup the workspace again.
 
 Check your terminal if the tools are installed:
 
-images::workspace1[]
+image::workspace1.png[]
 
-images::workspace2[]
+image::workspace2.png[]
 
-images::workspace3[]
+image::workspace3.png[]
 
 ### Scafolding project
 
