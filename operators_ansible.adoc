@@ -204,12 +204,12 @@ Build the hello-operator image and push it to a registry:
 
 [source,sh,role="copypaste"]
 ----
-operator-sdk build {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
+operator-sdk build {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest --image-builder buildah
 ----
 
 [source,sh,role="copypaste"]
 ----
-docker push {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
+podman push {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
 ----
 
 Kubernetes deployment manifests are generated in `deploy/operator.yaml`. The
