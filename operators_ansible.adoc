@@ -167,13 +167,6 @@ oc project <myuser-namespace>
 Before running the operator, Kubernetes needs to know about the new custom
 resource definition the operator will be watching.
 
-Deploy the CRD:
-
-[source,sh,role="copypaste"]
-----
-$ oc create -f deploy/crds/ansible-operator.openshift.pub_hellos_crd.yaml
-----
-
 ### Run the operator
 
 NOTE: Replace <user> with your own user
