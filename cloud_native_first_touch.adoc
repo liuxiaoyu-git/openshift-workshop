@@ -194,7 +194,6 @@ Create a URL and add an entry in the local configuration file as follows
 [source, bash]
 ----
 odo url create app --port 8080
-[source, bash]
 ----
 
 Push the changes. This creates a URL on the cluster.
