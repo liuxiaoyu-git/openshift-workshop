@@ -7,6 +7,34 @@
 * Access to a Kubernetes or an OpenShift cluster
 * Quay account
 
+### Configure Code Ready Workspaces
+
+Go to workspace settings:
+
+images::workspace0[]
+
+images::workspace01[]
+
+----
+  - mountSources: true
+    memoryLimit: 1Gi
+    type: dockerimage
+    alias: container-tools
+    image: 'quay.io/openlab-red/container-tools:latest'
+----
+
+*Save and apply the changes*
+
+This will startup the workspace again.
+
+Check your terminal if the tools are installed:
+
+images::workspace1[]
+
+images::workspace2[]
+
+images::workspace3[]
+
 ### Scafolding project
 
 ```
@@ -17,6 +45,7 @@ operator-sdk new hello-operator \
     --type=ansible
 cd hello-operator
 ```
+
 
 
 ### Watches file
