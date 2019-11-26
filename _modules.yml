@@ -9,6 +9,9 @@ config:
   - name: OCP_DOMAIN
     value: apps.pro1.mattiamascia.com
     desc: OpenShift router domain
+  - name: OCP_API_PROD
+    value: https://api.ocp.bdmsky.net:6443
+    desc: OpenShift DEV Cluster API 
   - name: OCP_CONSOLE
     value: https://console-openshift-console.apps.pro1.mattiamascia.com
     desc: OpenShift Console URL
@@ -49,6 +52,7 @@ modules:
     name: Using Tekton Pipelines
     vars:
       IMAGE_REGISTRY:
+      OCP_API_PROD:
   setup_quay_tekton:
     name: Configure Quay
     vars:
