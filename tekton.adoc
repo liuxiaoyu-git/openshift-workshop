@@ -16,36 +16,51 @@ The pipeline we will build will perform the following steps:
 * (Optional) Run integration tests
 * Deploy the application to Prod environment (dedicated Prod cluster)
 
-==== Project Requirements
+==== Download manifests
 
-Since Tekton is still in *Dev Preview*, the Service Accounts it uses require high privileges. 
-
-Switch to your own project. Make sure the resources of the `people` application are deleted.
+Please clone the Git repository mentioned below which contains all the necesarry manifests for creating the pipeline.
 
 [source,sh,role="copypaste"]
 ----
-oc project <myuser-namespace>
+git clone https://github.com/openlab-red/pipelines-catalog
 ----
 
-[source,sh,role="copypaste"]
+==== Configure clusters and contexts
+
+We will consider the following:
+
+* https://console-openshift-console.apps.pro1.mattiamascia.com[AWS] Cluster will be the *DEVELOPMENT* cluster, where we will build, test and deploy our app.
+* https://console-openshift-console.apps.ocp.bdmsky.net[BareMetal] cluster will be the *PRODUCTION* one. Once the application is built and deployed to dev, we will deploy it to production as well.
+
+Please go to the Dev and Prod cluster mentioned above and create a new or use your own project that is identified by your username.
+
+Then go to the terminal and login using *oc login* command obtained from the the console.
+
+image::oc-login.png[oc-login,640,480]
+
+image::oc-token.png[oc-token,320,240]
+
+Please do this for *both clusters*.
+
+Now, in order to be able to run commands against each of the clusters, you can switch the contexts using `oc config use-context <context-name>`
+However, by default the generated context names are long and difficult to remember, so to make it easier to change the context later, use the following commands:
+
 ----
-oc delete all -l app=people
+oc config get-contexts|grep mascia 
+oc config rename-context <contextname> dev
 ----
 
-Then provide the required privileges to `pipeline` and `default` ServiceAccounts. 
-
-[source,sh,role="copypaste"]
 ----
-oc adm policy add-scc-to-user privileged -z pipeline && \
-oc adm policy add-role-to-user edit -z pipeline && \
-oc adm policy add-role-to-user edit -z default && \
-oc adm policy add-scc-to-user privileged -z default && \
-oc adm policy add-scc-to-user anyuid -z default
+oc config get-contexts|grep bdmsky  
+oc config rename-context <contextname> prod
 ----
 
-NOTE: The pipeline Service Account is created automatically in all the cluster namespaces after OpenShift Pipelines Operator is installed. It is used by Tekton to interact with OpenShift API.
+Then, to switch to dev cluster for example you'll need to run only `oc config use-context dev`.
 
-==== Get authentication token for Prod cluster
+Tekton pipelines will run only on Dev cluster, because on one side they are required for build and on the other side they provide the possibility to define a `cluster` resources where they will be able to deploy the application (in our case we will define the Bare metal cluster as the prod cluster).
+
+
+#### Configure Prod environment
 
 Tekton pipelines can be configured with `PipelineResources`, which can be used as inputs or outputs for the tasks in the pipeline. Example of `PipelineResources`: source, image, *cluster*.
 
@@ -63,15 +78,67 @@ To generate the secret, connect to Prod cluster and run `gen-secret-pipelinereso
 
 [source,sh,role="copypaste"]
 ----
-bash gen-prod-secret.sh <API_URL_PROD_CLUSTER> <NAMESPACE_PROD_CLUSTER>
+oc config use-context prod
 ----
 
-The generated file will be called `pipelineresource-prod-cluster-secret.yaml`
+NOTE: Please replace <myuser-namespace> with your user namespace created on Prod cluster.
 
-==== Create Tekton resources on Dev cluster
+[source,sh,role="copypaste"]
+----
+cd pipelines-catalog/quarkus
+bash gen-prod-secret.sh {{OCP_API_PROD}} <myuser-namespace>
+----
 
-Now it's time to create the Tekton resources required by the pipeline.
-After connecting back to Dev cluster, first create `cluster` PipelineResource and the previously generated Secret.
+The generated file will be called `pipelineresource-prod-cluster-secret.yaml`.
+
+We also need to create the initial deployment, the service and the route as the pipeline will only rollout the new version of our application.
+
+NOTE: Please replace <username> with your own username
+
+[source,sh,role="copypaste"]
+----
+sed -i 's/image:/image: quay.apps.ocp.bdmsky.net/<username>/people:latest'
+oc create -f resources.yaml
+----
+
+
+#### Configure Dev environment
+
+Let's prepare the dev environment now.
+
+First switch the context:
+
+[source,sh,role="copypaste"]
+----
+oc config use-context dev
+----
+
+Since Tekton is still in *Dev Preview*, the Service Accounts it uses require high privileges. 
+Then provide the required privileges to `pipeline` and `default` ServiceAccounts. 
+
+[source,sh,role="copypaste"]
+----
+oc policy add-scc-to-user privileged -z pipeline && \
+oc policy add-role-to-user edit -z pipeline && \
+oc policy add-role-to-user edit -z default && \
+oc policy add-scc-to-user privileged -z default && \
+oc policy add-scc-to-user anyuid -z default
+----
+
+NOTE: The `pipeline` Service Account is created automatically in all the cluster namespaces after OpenShift Pipelines Operator is installed. It is used by Tekton to interact with OpenShift API.
+
+As well as in prod, we need to create the initial resources.
+
+NOTE: Please replace <username> with your own username
+
+[source,sh,role="copypaste"]
+----
+sed -i 's/image:\ \'\'/image: quay.apps.ocp.bdmsky.net/<username>/people:latest'
+oc create -f resources.yaml
+----
+
+Now it's time to create the Tekton resources.
+First create `cluster` PipelineResource and the previously generated Secret.
 
 [source,sh,role="copypaste"]
 ----
@@ -88,10 +155,10 @@ After, create the `Tasks` resources. The following will be required for our pipe
 
 [source,sh,role="copypaste"]
 ----
-oc apply -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/openshift-client.yaml \
-  -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/openshift-client-kubecfg.yaml
-  -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/s2i-quarkus-task.yaml \
-  -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/master/quarkus/mvn.yaml
+oc apply -f openshift-client.yaml \
+  -f openshift-client-kubecfg.yaml
+  -f s2i-quarkus-task.yaml \
+  -f mvn.yaml
 ----
 
 Check if the tasks were successfully created.
@@ -109,7 +176,7 @@ s2i-quarkus                 13 seconds ago
 mvn                         13 seconds ago
 ----
 
-Next, create the `PipelineResources`. Our pipeline requires two resources:
+Next, create the `PipelineResources`:
 
 NOTE: Replace <username> with your assigned user.
 
@@ -130,7 +197,6 @@ spec:
 EOF
 ----
 
-
 * the Docker repository for storing the image artifact
 
 [source,sh,role="copypaste"]
@@ -148,14 +214,12 @@ spec:
 EOF
 ----
 
-NOTE: We need to deploy app in prod with image-stream missing tag
-NOTE: Need to add integration test
-
-We will use one `Condition` resource in order to check if the app is already deployed in production. Inspect the file and then create the resource.
+We will use one `Condition` resources in order to check if the app is already deployed. 
 
 [source,sh,role="copypaste"]
 ----
-oc create -f https://raw.githubusercontent.com/openlab-red/pipelines-catalog/prod-deployment/quarkus/condition-app-prod-deployed.yaml
+oc create -f condition-deployed-prod.yaml
+oc create -f condition-deployed-dev.yaml
 ----
 
 Check if the resources were created
@@ -177,8 +241,9 @@ oc get conditions
 ----
 
 ----
-NAME           AGE
-app-deployed   38s
+NAME            AGE
+deployed-prod   38s
+deployed-dev    38s
 ----
 
 
@@ -186,9 +251,10 @@ app-deployed   38s
 
 [source,bash]
 ----
-oc create -f pipeline/deploy.yaml
+oc create -f pipeline.yaml
 ----
-Check the pipeline created
+
+Check of the pipeline was created
 
 [source,bash]
 ----
@@ -202,7 +268,7 @@ quarkus-deploy   41s
 
 From Developer Console > Pipelines
 
-image::dev.pipeline.png[ Dev Pipeline ]
+image::dev.pipeline.png[ Pipeline ]
 
 === Launch the pipeline
 
