@@ -36,7 +36,7 @@ git push -u origin master
 
 == Build Native with OpenShift s2i
 
-Create a new OpenShift Build binary type
+Create a new OpenShift Build source type
 
 [source,none,role="copypaste"]
 ----
