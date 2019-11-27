@@ -6,5 +6,5 @@ content:
 
 modules:
   activate:
-  - setup_quay_tekton
+  - setup_tekton
   - tekton

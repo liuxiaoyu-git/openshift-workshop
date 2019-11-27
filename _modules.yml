@@ -92,10 +92,16 @@ modules:
     vars:
       IMAGE_REGISTRY:
       OCP_API_PROD:
-  setup_quay_tekton:
-    name: Configure Quay
+  setup_tekton:
+    name: About and preparations
     vars:
       IMAGE_REGISTRY:
+      OCP_PROD_CLUSTER:
+      OCP_DEV_CLUSTER:
+      OCP_PROD_NAMESPACE:
+      OCP_DEV_NAMESPACE:
+      OCP_AWS_CONSOLE:
+      OCP_BARE_CONSOLE:
   operators_go:
     name: Deploy a Go Operator
     vars:

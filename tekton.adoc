@@ -1,80 +1,3 @@
-=== Pipeline Setup
-
-This tutorial sets up a Tekton pipeline for building and deploying a application. We will use the `people` Quarkus application, i.e. the one that uses Quarkus Kafka extension. 
-Since Tekton provides the ability to deploy applications to different clusters, we will use dedicated clusters for Dev and Prod. _OpenShift Pipelines Operator_ needs to be installed only on the Dev cluster.
-
-The pipeline we will build will perform the following steps:
-
-* Run application Unit tests
-* Create a native build of the application using S2I
-* Push the image to the external container registry (Quay)
-* Deploy the application to Dev environment (dedicated Dev cluster)
-* (Optional) Run integration tests
-* Deploy the application to Prod environment (dedicated Prod cluster)
-
-==== Initial set-up
-
-Let's define the following environment variables in order to help us to customize our environments
-
-INFO: Append `-<username>` to the OCP_PROD_NAMESPACE and OCP_DEV_NAMESPACE variable definition.
-
-----
-export OCP_PROD_CLUSTER={{OCP_PROD_CLUSTER}}
-export OCP_DEV_CLUSTER={{OCP_DEV_CLUSTER}}
-export OCP_PROD_NAMESPACE={{OCP_PROD_NAMESPACE}}
-export OCP_DEV_NAMESPACE={{OCP_DEV_NAMESPACE}}
-export OCP_DEV_KAFKA_NAMESPACE=<dev-kafka-namespace>
-export USERNAME=<my_sso_username>
-----
-
-
-==== Download manifests
-
-Please clone the Git repository mentioned below which contains all the necesarry manifests for creating the pipeline.
-
-[source,sh,role="copypaste"]
-----
-git clone https://github.com/openlab-red/pipelines-catalog
-----
-
-==== Configure clusters and contexts
-
-We will consider the following:
-
-* {{OCP_AWS_CONSOLE}}[AWS] Cluster will be the *DEVELOPMENT* cluster, where we will build, test and deploy our app.
-* {{OCP_BARE_CONSOLE}}[BareMetal] cluster will be the *PRODUCTION* one. Once the application is built and deployed to dev, we will deploy it to production as well.
-
-Please go to the Dev and Prod cluster mentioned above and create a new projects for Dev and Prod
-
-* on {{OCP_PROD_CONSOLE}}, create {{OCP_PROD_NAMESPACE}}
-* on {{OCP_DEV_CONSOLE}}, create {{OCP_DEV_NAMESPACE}}
-
-
-Then go to the terminal and login using *oc login* command obtained from the the console.
-
-image::oc-login.png[oc-login,640,480]
-
-image::oc-token.png[oc-token,320,240]
-
-Please do this for *both clusters*.
-
-Now, in order to be able to run commands against each of the clusters, you can switch the contexts using `oc config use-context <context-name>`
-However, by default the generated context names are long and difficult to remember, so to make it easier to change the context later, use the following commands:
-
-----
-oc config get-contexts|grep ${OCP_DEV_CLUSTER}
-oc config rename-context <contextname> dev
-----
-
-----
-oc config get-contexts|grep ${OCP_PROD_CLUSTER}
-oc config rename-context <contextname> prod
-----
-
-Then, to switch to dev cluster for example you'll need to run only `oc config use-context dev`.
-
-Tekton pipelines will run only on Dev cluster, because on one side they are required for build and on the other side they provide the possibility to define a `cluster` resources where they will be able to deploy the application (in our case we will define the Bare metal cluster as the prod cluster).
-
 
 #### Configure Prod environment
 
@@ -112,7 +35,7 @@ The script will generate two files:
 * `pipelineresource-prod-cluster.yaml`  -  Cluster PipelineResource
 * `pipelineresource-prod-cluster-secret.yaml` - Secret for Cluster PipelineResource
 
-We also need to create the initial deployment, service, route and imagestream as the pipeline will only rollout the new version of our application.
+We also need to create the initial deployment, service and imagestream as the pipeline will only rollout the new version of our application.
 
 NOTE: Please replace <username> with your own username
 

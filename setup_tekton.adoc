@@ -1,0 +1,133 @@
+### About lab
+
+This tutorial sets up a Tekton pipeline for building and deploying a application. We will use the `people` Quarkus application, i.e. the one that uses Quarkus Kafka extension. 
+Since Tekton provides the ability to deploy applications to different clusters, we will use dedicated clusters for Dev and Prod. _OpenShift Pipelines Operator_ needs to be installed only on the Dev cluster.
+
+The pipeline we will build will perform the following steps:
+
+* Run application Unit tests
+* Create a native build of the application using S2I
+* Push the image to the external container registry (Quay)
+* Deploy the application to Dev environment (dedicated Dev cluster)
+* (Optional) Run integration tests
+* Deploy the application to Prod environment (dedicated Prod cluster)
+
+### Initial setup
+
+Let's define the following environment variables in order to help us to customize our environments
+
+INFO: Append `-<username>` to the OCP_PROD_NAMESPACE and OCP_DEV_NAMESPACE variable definition.
+
+----
+export OCP_PROD_CLUSTER={{OCP_PROD_CLUSTER}}
+export OCP_DEV_CLUSTER={{OCP_DEV_CLUSTER}}
+export OCP_PROD_NAMESPACE={{OCP_PROD_NAMESPACE}}
+export OCP_DEV_NAMESPACE={{OCP_DEV_NAMESPACE}}
+export OCP_DEV_KAFKA_NAMESPACE=<dev-kafka-namespace>
+export USERNAME=<my_sso_username>
+----
+
+
+#### Download manifests
+
+Please clone the Git repository mentioned below which contains all the necesarry manifests for creating the pipeline.
+
+[source,sh,role="copypaste"]
+----
+git clone https://github.com/openlab-red/pipelines-catalog
+----
+
+
+#### Cluster contexts
+
+We will consider the following:
+
+* {{OCP_AWS_CONSOLE}}[AWS] Cluster will be the *DEVELOPMENT* cluster, where we will build, test and deploy our app.
+* {{OCP_BARE_CONSOLE}}[BareMetal] cluster will be the *PRODUCTION* one. Once the application is built and deployed to dev, we will deploy it to production as well.
+
+Please go to the Dev and Prod cluster mentioned above and create a new projects for Dev and Prod
+
+* on {{OCP_PROD_CONSOLE}}, create {{OCP_PROD_NAMESPACE}}
+* on {{OCP_DEV_CONSOLE}}, create {{OCP_DEV_NAMESPACE}}
+
+
+Then go to the terminal and login using *oc login* command obtained from the the console.
+
+image::oc-login.png[oc-login,640,480]
+
+image::oc-token.png[oc-token,320,240]
+
+Please do this for *both clusters*.
+
+Now, in order to be able to run commands against each of the clusters, you can switch the contexts using `oc config use-context <context-name>`
+However, by default the generated context names are long and difficult to remember, so to make it easier to change the context later, use the following commands:
+
+----
+oc config get-contexts|grep ${OCP_DEV_CLUSTER}
+oc config rename-context <contextname> dev
+----
+
+----
+oc config get-contexts|grep ${OCP_PROD_CLUSTER}
+oc config rename-context <contextname> prod
+----
+
+Then, to switch to dev cluster for example you'll need to run only `oc config use-context dev`.
+
+Tekton pipelines will run only on Dev cluster, because on one side they are required for build and on the other side they provide the possibility to define a `cluster` resources where they will be able to deploy the application (in our case we will define the Bare metal cluster as the prod cluster).
+
+#### Quay
+
+For this lab, we'll use the internal Quay registry. Quay is configured to use Red Hat SSO for authentication.
+
+* Open https://{{IMAGE_REGISTRY}} in a browser and login using Red Hat SSO and GitHub IDP. If you don't have GitHub account, please use one of the user provided.
+
+* Now you'll need to create one new repository, called _people_
+
+* Go to the repository settings and provide Write permissions to the _generic_ Robot account created in the previous lab.
+
+* Now go to _Account Settings_ and click on the Robot icon on the left panel. Then click on the wheel from the end of the line corresponding to your account and then on _View Credentials_. Choose _Kuberenetes Secret_ and get the yaml file.
+
+* Copy the Secret defined in the yaml file and save it locally as `secret.yaml`. Then you'll neeed to link it to the `pipeline` service accunt. Tekton uses `pipeline` service account to communicate with Kubernetes API and it needs the credentials for Quay in order to be able to push and pull images.
+
+Now it's time to link the secrets.
+
+##### DEV
+
+[source,sh,role="copypaste"]
+----
+oc config use-context dev
+----
+
+Then create the secret
+[source,sh,role="copypaste"]
+----
+oc create -f secret.yaml
+----
+
+Link the secret to `pipeline` and `default` service account 
+[source,sh,role="copypaste"]
+----
+oc secrets link pipeline <username>-generic-pull-secret --for=pull
+oc secrets link pipeline <username>-generic-pull-secret 
+oc secrets link default <username>-generic-pull-secret 
+----
+
+
+##### PROD
+[source,sh,role="copypaste"]
+----
+oc config use-context prod
+----
+
+Then create the secret
+[source,sh,role="copypaste"]
+----
+oc create -f secret.yaml
+----
+
+Link the secret to `default` service account 
+[source,sh,role="copypaste"]
+----
+oc secrets link default <username>-generic-pull-secret 
+----
