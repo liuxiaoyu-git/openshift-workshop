@@ -102,11 +102,46 @@ oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/<username>/people:latest
 
 The last thing we'll need to configure on prod would be customization of Quarkus `application.properties` configuration. This should be configured to use the same Kafka as in Dev(for the purpose of this lab)
 
-NOTE: Please replace <myuser-namespace> with your user namespace created on Prod cluster.
+NOTE: Please replace <prod-namespace-prod-cluster> and <kafka-namespace-dev-cluster> with the namespace where the namespace where your app is running on prod cluster, respectevely to the namespace where Kafka runs on Dev cluster
 
 [source,sh,role="copypaste"]
 ----
-oc create -f configmap-kafka-prod.yaml
+cat <<EOF | oc create -f 
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: quarkus-config
+  namespace: <prod-namespace-prod-cluster>
+data:
+  application.properties: >-
+    # drop and create the database at startup (use `update` to only update the
+    schema)
+
+    quarkus.hibernate-orm.database.generation=drop-and-create
+
+    # Configure the Kafka sink (we write to it)
+
+    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=names-cluster-kafka-bootstrap-kafka.<kafka-namespace-dev-cluster>.apps.pro1.mattiamascia.com:9094
+
+    %prod.mp.messaging.outgoing.generated-name.connector=smallrye-kafka
+
+    %prod.mp.messaging.outgoing.generated-name.topic=names
+
+    %prod.mp.messaging.outgoing.generated-name.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+
+
+    # Configure the Kafka source (we read from it)
+
+    %prod.mp.messaging.incoming.names.bootstrap.servers=names-cluster-kafka-bootstrap-kafka.<kafka-namespace-dev-cluster>.apps.pro1.mattiamascia.com:9094
+
+    %prod.mp.messaging.incoming.names.connector=smallrye-kafka
+
+    %prod.mp.messaging.incoming.names.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+EOF
+----
+
+[source,sh,role="copypaste"]
+----
 oc set volume dc/quarkus --add --overwrite --name=config --type=configmap --configmap-name=quarkus-config
  --mount-path=/home/quarkus/config
 ----
