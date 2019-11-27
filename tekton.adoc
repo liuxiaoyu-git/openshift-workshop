@@ -97,8 +97,7 @@ NOTE: Please replace <username> with your own username
 
 [source,sh,role="copypaste"]
 ----
-sed -i 's/image:/image: quay.apps.ocp.bdmsky.net/<username>/people:latest' resources.yaml
-oc create -f resources.yaml
+oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/<username>/people:latest
 ----
 
 The last thing we'll need to configure on prod would be customization of Quarkus `application.properties` configuration. This should be configured to use the same Kafka as in Dev(for the purpose of this lab)
@@ -143,8 +142,7 @@ NOTE: Please replace <username> with your own username
 
 [source,sh,role="copypaste"]
 ----
-sed -i 's/image:\ \'\'/image: quay.apps.ocp.bdmsky.net/<username>/people:latest'
-oc create -f resources.yaml
+oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/<username>/people:latest
 ----
 
 Now it's time to create the Tekton resources.
