@@ -97,7 +97,7 @@ NOTE: Please replace <username> with your own username
 
 [source,sh,role="copypaste"]
 ----
-sed -i 's/image:/image: quay.apps.ocp.bdmsky.net/<username>/people:latest'
+sed -i 's/image:/image: quay.apps.ocp.bdmsky.net/<username>/people:latest' resources.yaml
 oc create -f resources.yaml
 ----
 
@@ -108,7 +108,7 @@ NOTE: Please replace <myuser-namespace> with your user namespace created on Prod
 [source,sh,role="copypaste"]
 ----
 oc create -f configmap-kafka-prod.yaml
-oc set volume dc/<myuser-namespace> --add --overwrite --name=config --type=configmap --configmap-name=quarkus-config
+oc set volume dc/quarkus --add --overwrite --name=config --type=configmap --configmap-name=quarkus-config
  --mount-path=/home/quarkus/config
 ----
 
@@ -128,11 +128,11 @@ Then provide the required privileges to `pipeline` and `default` ServiceAccounts
 
 [source,sh,role="copypaste"]
 ----
-oc policy add-scc-to-user privileged -z pipeline && \
-oc policy add-role-to-user edit -z pipeline && \
-oc policy add-role-to-user edit -z default && \
-oc policy add-scc-to-user privileged -z default && \
-oc policy add-scc-to-user anyuid -z default
+oc adm policy add-scc-to-user privileged -z pipeline && \
+oc adm policy add-role-to-user edit -z pipeline && \
+oc adm policy add-role-to-user edit -z default && \
+oc adm policy add-scc-to-user privileged -z default && \
+oc adm policy add-scc-to-user anyuid -z default
 ----
 
 NOTE: The `pipeline` Service Account is created automatically in all the cluster namespaces after OpenShift Pipelines Operator is installed. It is used by Tekton to interact with OpenShift API.
@@ -166,7 +166,7 @@ After, create the `Tasks` resources. The following will be required for our pipe
 [source,sh,role="copypaste"]
 ----
 oc apply -f openshift-client.yaml \
-  -f openshift-client-kubecfg.yaml
+  -f openshift-client-kubecfg.yaml \
   -f s2i-quarkus-task.yaml \
   -f mvn.yaml
 ----
