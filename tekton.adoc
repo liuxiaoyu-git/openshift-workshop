@@ -37,18 +37,21 @@ The script will generate two files:
 
 We also need to create the initial deployment, service and imagestream as the pipeline will only rollout the new version of our application.
 
-NOTE: Please replace <username> with your own username
+[source,sh,role="copypaste"]
+----
+oc apply -f resources.yaml
+----
 
 [source,sh,role="copypaste"]
 ----
-oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/$USERNAME/people:latest
+oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/${SSO_USERNAME}/people:latest
 ----
 
 The last thing we'll need to configure on prod would be customization of Quarkus `application.properties` configuration. This should be configured to use the same Kafka as in Dev(for the purpose of this lab)
 
 [source,sh,role="copypaste"]
 ----
-cat <<EOF | oc create -f 
+cat <<EOF | oc apply -f -
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -56,36 +59,23 @@ metadata:
   namespace: ${OCP_PROD_NAMESPACE}
 data:
   application.properties: >-
-    # drop and create the database at startup (use `update` to only update the
-    schema)
 
     quarkus.hibernate-orm.database.generation=drop-and-create
 
-    # Configure the Kafka sink (we write to it)
-
-    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=names-cluster-kafka-bootstrap-kafka.${OCP_DEV_KAFKA_NAMESPACE}.${OCP_DEV_DOMAIN}:9094
-
+    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=${OCP_DEV_KAFKA_APP}-${OCP_DEV_KAFKA_NAMESPACE}.${OCP_DEV_DOMAIN}:9094
     %prod.mp.messaging.outgoing.generated-name.connector=smallrye-kafka
-
-    %prod.mp.messaging.outgoing.generated-name.topic=names
-
+    %prod.mp.messaging.outgoing.generated-name.topic=realnames
     %prod.mp.messaging.outgoing.generated-name.value.serializer=org.apache.kafka.common.serialization.StringSerializer
 
-
-    # Configure the Kafka source (we read from it)
-
-    %prod.mp.messaging.incoming.names.bootstrap.servers=names-cluster-kafka-bootstrap-kafka.${OCP_DEV_KAFKA_NAMESPACE}.${OCP_DEV_DOMAIN}:9094
-
+    %prod.mp.messaging.incoming.names.bootstrap.servers=${OCP_DEV_KAFKA_APP}-${OCP_DEV_KAFKA_NAMESPACE}.${OCP_DEV_DOMAIN}:9094
     %prod.mp.messaging.incoming.names.connector=smallrye-kafka
-
     %prod.mp.messaging.incoming.names.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 EOF
 ----
 
 [source,sh,role="copypaste"]
 ----
-oc set volume dc/quarkus --add --overwrite --name=config --type=configmap --configmap-name=quarkus-config
- --mount-path=/home/quarkus/config
+oc set volume dc/people --add --overwrite --name=config --type=configmap --configmap-name=quarkus-config --mount-path=/home/quarkus/config
 ----
 
 #### Configure Dev environment
@@ -119,7 +109,39 @@ NOTE: Please replace <username> with your own username
 
 [source,sh,role="copypaste"]
 ----
-oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/${USERNAME}/people:latest
+oc apply -f resources.yaml
+----
+
+[source,sh,role="copypaste"]
+----
+oc set image dc/people quarkus=quay.apps.ocp.bdmsky.net/${SSO_USERNAME}/people:latest
+----
+
+[source,sh,role="copypaste"]
+----
+cat <<EOF | oc apply -f -
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: quarkus-config
+  namespace: ${OCP_PROD_NAMESPACE}
+data:
+  application.properties: >-
+    quarkus.hibernate-orm.database.generation=drop-and-create
+    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=${OCP_DEV_KAFKA_APP}.${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
+    %prod.mp.messaging.outgoing.generated-name.connector=smallrye-kafka
+    %prod.mp.messaging.outgoing.generated-name.topic=names
+    %prod.mp.messaging.outgoing.generated-name.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+
+    %prod.mp.messaging.incoming.names.bootstrap.servers=${OCP_DEV_KAFKA_APP}.${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
+    %prod.mp.messaging.incoming.names.connector=smallrye-kafka
+    %prod.mp.messaging.incoming.names.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+EOF
+----
+
+[source,sh,role="copypaste"]
+----
+oc set volume dc/people --add --overwrite --name=config --type=configmap --configmap-name=quarkus-config --mount-path=/home/quarkus/config
 ----
 
 Now it's time to create the Tekton resources.
@@ -178,7 +200,7 @@ spec:
   type: git
   params:
     - name: url
-      value: https://gogs.apps.ocp.bdmsky.net/${USERNAME}/quarkus-workshop
+      value: https://gogs.apps.ocp.bdmsky.net/${SSO_USERNAME}/quarkus-workshop
 EOF
 ----
 
@@ -195,7 +217,7 @@ spec:
   type: image
   params:
     - name: url
-      value: "quay.apps.ocp.bdmsky.net/${USERNAME}/people:latest"
+      value: "quay.apps.ocp.bdmsky.net/${SSO_USERNAME}/people:latest"
 EOF
 ----
 
