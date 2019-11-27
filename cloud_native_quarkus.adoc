@@ -45,6 +45,11 @@ Create a new OpenShift Build source type
 oc new-build {{GIT_SERVER}}/{{GIT_USER}}/quarkus-workshop-labs.git --docker-image quay.io/quarkus/ubi-quarkus-native-s2i:19.2.1 --name quarkus-s2i-src -l app=quarkus-s2i-src
 ----
 
+[NOTE]
+====
+The build will take few minutes to create the image, you can monitor the status on OpenShift Console.
+====
+
 Deploy your application
 
 [source,none,role="copypaste"]
@@ -61,11 +66,17 @@ oc expose service quarkus-s2i-src
 
 == Build binary with OpenShift from local  (require graalvm) or CodeReady
 
-Build Native
+Build Native in Local
 
 [source,none,role="copypaste"]
 ----
 mvn package -Pnative -Dquarkus.native.container-build=true
+----
+
+Build Native in CodeReady
+[source,none,role="copypaste"]
+----
+mvn package -Pnative
 ----
 
 Create a new OpenShift Build binary type
@@ -81,6 +92,11 @@ Start OpenShift Build from file
 ----
 oc start-build quarkus-s2i-bin --from-file target/*-runner
 ----
+
+[NOTE]
+====
+The build will take few minutes to create the image, you can monitor the status on OpenShift Console.
+====
 
 Deploy your application
 
