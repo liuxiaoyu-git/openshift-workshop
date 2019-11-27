@@ -21,6 +21,18 @@ config:
   - name: GIT_REPO
     value: '<your-repo>'
     desc: Git repo
+  - name: OCP_DEV_CLUSTER
+    value: https://api.ocp.bdmsky.net:6443
+    desc: API URL of the OpenShift Dev cluster
+  - name: OCP_DEV_NAMESPACE
+    value: dev
+    desc: Namespace where the application is deployed in the Dev environment
+  - name: OCP_DEV_CLUSTER
+    value: https://api.pro1.mattiamascia.com:6443
+    desc: API URL of the OpenShift Prod cluster
+  - name: OCP_PROD_NAMESPACE
+    value: prod
+    desc: Namespace where the application is deployed in the Prod environment
   
 modules:
   cloud_native_intro:

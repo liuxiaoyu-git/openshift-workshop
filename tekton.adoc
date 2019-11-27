@@ -1,9 +1,5 @@
 === Pipeline Setup
 
-IMPORTANT: We need to import quay image and deploy dc, svc and route if using only rollout. Otherwise we'll need a condition to check if app is not present... and if not use new-app. This needs to be done on both DEV and PROD
-
-IMPORTANT: Update pictures
-
 This tutorial sets up a Tekton pipeline for building and deploying a application. We will use the `people` Quarkus application, i.e. the one that uses Quarkus Kafka extension. 
 Since Tekton provides the ability to deploy applications to different clusters, we will use dedicated clusters for Dev and Prod. _OpenShift Pipelines Operator_ needs to be installed only on the Dev cluster.
 
@@ -16,6 +12,20 @@ The pipeline we will build will perform the following steps:
 * (Optional) Run integration tests
 * Deploy the application to Prod environment (dedicated Prod cluster)
 
+==== Initial set-up
+
+Let's define the following environment variables in order to help us to customize our environments
+
+INFO: Append `-<username>` to the OCP_PROD_NAMESPACE and OCP_DEV_NAMESPACE variable definition.
+
+----
+export OCP_PROD_CLUSTER={{OCP_PROD_CLUSTER}}
+export OCP_DEV_CLUSTER={{OCP_DEV_CLUSTER}}
+export OCP_PROD_NAMESPACE={{OCP_PROD_NAMESPACE}}
+export OCP_DEV_NAMESPACE={{OCP_DEV_NAMESPACE}}
+----
+
+
 ==== Project Requirements
 
 Since Tekton is still in *Dev Preview*, the Service Accounts it uses require high privileges. 
@@ -24,7 +34,7 @@ Switch to your own project. Make sure the resources of the `people` application 
 
 [source,sh,role="copypaste"]
 ----
-oc project <myuser-namespace>
+oc project $OCP_DEV_CLUSTER
 ----
 
 [source,sh,role="copypaste"]
@@ -202,7 +212,7 @@ quarkus-deploy   41s
 
 From Developer Console > Pipelines
 
-image::dev.pipeline.png[ Dev Pipeline ]
+image::tektonpipeline[ Dev Pipeline ]
 
 === Launch the pipeline
 
@@ -228,7 +238,7 @@ Showing logs...
 
 == Green
 
-image::dev.pipeline.green.png[ Green Pipeline ]
+image::tektongreen.png[ Green Pipeline ]
 
 == Verify
 
