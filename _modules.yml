@@ -6,12 +6,6 @@ config:
   - name: USER_NAMESPACE
     value: userXY-Namespace
     desc: User namespace
-  - name: OCP_DOMAIN
-    value: apps.pro1.mattiamascia.com
-    desc: OpenShift router domain
-  - name: OCP_CONSOLE
-    value: https://console-openshift-console.apps.pro1.mattiamascia.com
-    desc: OpenShift Console URL
   - name: GIT_SERVER
     value: https://gogs.apps.ocp.bdmsky.net
     desc: Git Server
@@ -21,18 +15,54 @@ config:
   - name: GIT_REPO
     value: '<your-repo>'
     desc: Git repo
-  - name: OCP_DEV_CLUSTER
+  - name: OCP_GCP_CONSOLE
+    value: https://console-openshift-console.apps.pro.openlab.red
+    desc: Console URL for of the OpenShift GCP cluster
+  - name: OCP_GCP_CLUSTER
+    value: https://api.pro.openlab.red:6443
+    desc: API URL of the OpenShift Dev cluster
+  - name: OCP_AWS_CONSOLE
+    value: https://console-openshift-console.apps.pro1.mattiamascia.com
+    desc: Console URL for of the OpenShift AWS cluster
+  - name: OCP_AWS_CLUSTER
+    value: https://api.pro1.mattiamascia.com:6443
+    desc: API URL of the OpenShift Dev cluster
+  - name: OCP_AWS_DOMAIN
+    value: apps.pro1.mattiamascia.com
+    desc: OpenShift router domain
+  - name: OCP_BARE_CONSOLE
+    value: https://console-openshift-console.apps.pro.openlab.red
+    desc: Console URL for of the OpenShift Bare cluster
+  - name: OCP_BARE_CLUSTER
     value: https://api.ocp.bdmsky.net:6443
     desc: API URL of the OpenShift Dev cluster
-  - name: OCP_DEV_NAMESPACE
-    value: dev
-    desc: Namespace where the application is deployed in the Dev environment
-  - name: OCP_DEV_CLUSTER
-    value: https://api.pro1.mattiamascia.com:6443
-    desc: API URL of the OpenShift Prod cluster
+  - name: OCP_PROD_CONSOLE
+    value: https://console-openshift-console.apps.pro.openlab.red
+    desc: Console URL for of the OpenShift Prod cluster
+  - name: OCP_PROD_CLUSTER
+    value: https://api.ocp.bdmsky.net:6443
+    desc: API URL of the OpenShift Dev cluster
   - name: OCP_PROD_NAMESPACE
     value: prod
     desc: Namespace where the application is deployed in the Prod environment
+  - name: OCP_DEV_CONSOLE
+    value: https://console-openshift-console.apps.pro1.mattiamascia.com
+    desc: Console URL for of the OpenShift DEV cluster
+  - name: OCP_DEV_CLUSTER
+    value: https://api.pro1.mattiamascia.com:6443
+    desc: API URL of the OpenShift Prod cluster
+  - name: OCP_DEV_NAMESPACE
+    value: dev
+    desc: Namespace where the application is deployed in the Dev environment
+  - name: OCP_DEV_DOMAIN
+    value: apps.pro1.mattiamascia.com
+    desc: OpenShift router domain
+  - name: OCP_API_PROD
+    value: https://api.ocp.bdmsky.net:6443
+    desc: OpenShift DEV Cluster API 
+  - name: OCP_CONSOLE
+    value: https://console-openshift-console.apps.pro1.mattiamascia.com
+    desc: OpenShift Console URL
   
 modules:
   cloud_native_intro:
@@ -61,6 +91,7 @@ modules:
     name: Using Tekton Pipelines
     vars:
       IMAGE_REGISTRY:
+      OCP_API_PROD:
   setup_quay_tekton:
     name: Configure Quay
     vars:

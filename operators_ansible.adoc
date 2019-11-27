@@ -7,6 +7,34 @@
 * Access to a Kubernetes or an OpenShift cluster
 * Quay account
 
+### Configure Code Ready Workspaces
+
+Go to workspace settings:
+
+image::workspaces0.png[]
+
+image::workspaces01.png[]
+
+----
+  - mountSources: true
+    memoryLimit: 1Gi
+    type: dockerimage
+    alias: container-tools
+    image: 'quay.io/openlab-red/container-tools:latest'
+----
+
+*Save and apply the changes*
+
+This will startup the workspace again.
+
+Check your terminal if the tools are installed:
+
+image::workspaces1.png[]
+
+image::workspaces2.png[]
+
+image::workspaces3.png[]
+
 ### Scafolding project
 
 ```
@@ -17,6 +45,7 @@ operator-sdk new hello-operator \
     --type=ansible
 cd hello-operator
 ```
+
 
 
 ### Watches file
@@ -167,13 +196,6 @@ oc project <myuser-namespace>
 Before running the operator, Kubernetes needs to know about the new custom
 resource definition the operator will be watching.
 
-Deploy the CRD:
-
-[source,sh,role="copypaste"]
-----
-$ oc create -f deploy/crds/ansible-operator.openshift.pub_hellos_crd.yaml
-----
-
 ### Run the operator
 
 NOTE: Replace <user> with your own user
@@ -182,12 +204,12 @@ Build the hello-operator image and push it to a registry:
 
 [source,sh,role="copypaste"]
 ----
-operator-sdk build {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
+operator-sdk build {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest --image-builder buildah
 ----
 
 [source,sh,role="copypaste"]
 ----
-docker push {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
+podman push {{IMAGE_REGISTRY}}/<user>/ansible-operator:latest
 ----
 
 Kubernetes deployment manifests are generated in `deploy/operator.yaml`. The
