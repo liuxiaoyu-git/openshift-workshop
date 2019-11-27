@@ -31,8 +31,9 @@ Push an existing repository from the command line
 [source,none,role="copypaste"]
 ----
 git remote add internal {{GIT_SERVER}}/{{GIT_USER}}/quarkus-workshop-labs.git
-git add --all
-git push -u origin master
+# Only if you have new files
+# git add --all
+git push -u internal master
 ----
 
 == Build Native with OpenShift s2i
