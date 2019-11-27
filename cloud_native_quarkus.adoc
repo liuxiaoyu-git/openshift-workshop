@@ -30,7 +30,8 @@ Push an existing repository from the command line
 
 [source,none,role="copypaste"]
 ----
-git remote add origin {{GIT_SERVER}}/{{GIT_USER}}/quarkus-workshop-labs.git
+git remote add internal {{GIT_SERVER}}/{{GIT_USER}}/quarkus-workshop-labs.git
+git add --all
 git push -u origin master
 ----
 
