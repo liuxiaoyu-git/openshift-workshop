@@ -149,7 +149,7 @@ Then we'll need to extract the Kafka Bootstrap Service and Route to be used late
 [source,sh,role="copypaste"]
 ----
 export OCP_DEV_KAFKA_SVC=$(oc get svc -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $1}'|head -1).${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
-export OCP_DEV_KAFKA_ROUTE=$(oc get route -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $2}'|head -1)
+export OCP_DEV_KAFKA_ROUTE=$(oc get route -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $2}'|head -1):443
 ----
 
 
