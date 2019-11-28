@@ -124,7 +124,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: quarkus-config
-  namespace: ${OCP_PROD_NAMESPACE}
+  namespace: ${OCP_DEV_NAMESPACE}
 data:
   application.properties: |
     quarkus.hibernate-orm.database.generation=drop-and-create
@@ -200,7 +200,7 @@ spec:
   type: git
   params:
     - name: url
-      value: https://gogs.apps.ocp.bdmsky.net/${SSO_USERNAME}/quarkus-workshop
+      value: https://github.com/radudd/quarkus-workshop-labs
 EOF
 ----
 
@@ -226,6 +226,10 @@ We will use one `Condition` resources in order to check if the app is already de
 [source,sh,role="copypaste"]
 ----
 oc create -f condition-deployed-prod.yaml
+----
+
+[source,sh,role="copypaste"]
+----
 oc create -f condition-deployed-dev.yaml
 ----
 
@@ -237,9 +241,10 @@ oc get pipelineresource
 ----
 
 ----
-NAME   AGE
-gogs   12s
-quay   10s
+NAME           AGE
+gogs           26s
+prod-cluster   89s
+quay           20s
 ----
 
 [source,sh,role="copypaste"]

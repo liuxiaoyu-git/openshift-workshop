@@ -31,7 +31,7 @@ config:
     value: apps.pro1.mattiamascia.com
     desc: OpenShift router domain
   - name: OCP_BARE_CONSOLE
-    value: https://console-openshift-console.apps.pro.openlab.red
+    value: https://console-openshift-console.apps.ocp.bdmsky.net
     desc: Console URL for of the OpenShift Bare cluster
   - name: OCP_BARE_CLUSTER
     value: https://api.ocp.bdmsky.net:6443
@@ -40,7 +40,7 @@ config:
     value: https://console-openshift-console.apps.pro.openlab.red
     desc: Console URL for of the OpenShift Prod cluster
   - name: OCP_PROD_CLUSTER
-    value: https://api.ocp.bdmsky.net:6443
+    value: https://api.pro.openlab.red:6443
     desc: API URL of the OpenShift Dev cluster
   - name: OCP_PROD_NAMESPACE
     value: prod

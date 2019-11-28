@@ -18,15 +18,24 @@ Let's define the following environment variables in order to help us to customiz
 
 INFO: Append `-<username>` to the OCP_PROD_NAMESPACE and OCP_DEV_NAMESPACE variable definition.
 
+[source,sh,role="copypaste"]
 ----
 export SSO_USERNAME=<my_sso_username>
 export OCP_DEV_KAFKA_NAMESPACE=<dev-kafka-namespace>
+----
 
+[source,sh,role="copypaste"]
+----
 export OCP_PROD_CLUSTER={{OCP_PROD_CLUSTER}}
 export OCP_DEV_CLUSTER={{OCP_DEV_CLUSTER}}
+----
+
+INFO: Replace with your custom Project
+
+[source,sh,role="copypaste"]
+----
 export OCP_PROD_NAMESPACE={{OCP_PROD_NAMESPACE}}
 export OCP_DEV_NAMESPACE={{OCP_DEV_NAMESPACE}}
-
 ----
 
 
@@ -45,32 +54,53 @@ git clone https://github.com/openlab-red/pipelines-catalog
 We will consider the following:
 
 * {{OCP_AWS_CONSOLE}}[AWS] Cluster will be the *DEVELOPMENT* cluster, where we will build, test and deploy our app.
-* {{OCP_BARE_CONSOLE}}[BareMetal] cluster will be the *PRODUCTION* one. Once the application is built and deployed to dev, we will deploy it to production as well.
-
-Please go to the Dev and Prod cluster mentioned above and create a new projects for Dev and Prod
-
-* on {{OCP_PROD_CONSOLE}}, create {{OCP_PROD_NAMESPACE}}
-* on {{OCP_DEV_CONSOLE}}, create {{OCP_DEV_NAMESPACE}}
+* {{OCP_GCP_CONSOLE}}[GCP] cluster will be the *PRODUCTION* one. Once the application is built and deployed to dev, we will deploy it to production as well.
 
 
-Then go to the terminal and login using *oc login* command obtained from the the console.
+##### Dev cluster
+
+Please go to the {{OCP_DEV_CONSOLE}} and obtain the login command.
 
 image::oc-login.png[oc-login,640,480]
 
 image::oc-token.png[oc-token,320,240]
 
-Please do this for *both clusters*.
+Go to the terminal, login and create a new project.
+
+[source,sh,role="copypaste"]
+----
+oc new-project {{OCP_DEV_NAMESPACE}}
+----
 
 Now, in order to be able to run commands against each of the clusters, you can switch the contexts using `oc config use-context <context-name>`
 However, by default the generated context names are long and difficult to remember, so to make it easier to change the context later, use the following commands:
 
+[source,sh,role="copypaste"]
 ----
-oc config get-contexts|grep ${OCP_DEV_CLUSTER}
+oc config get-contexts|grep ${OCP_DEV_CLUSTER#*/}|grep ${OCP_DEV_NAMESPACE}
 oc config rename-context <contextname> dev
 ----
 
+#### PROD
+
+Please go to the {{OCP_PROD_CONSOLE}} and obtain the login command.
+
+image::oc-login.png[oc-login,640,480]
+
+image::oc-token.png[oc-token,320,240]
+
+Then go to the terminal and login, after create a project.
+
+[source,sh,role="copypaste"]
 ----
-oc config get-contexts|grep ${OCP_PROD_CLUSTER}
+oc new-project {{OCP_PROD_NAMESPACE}}
+----
+
+Configure context as for dev:
+
+[source,sh,role="copypaste"]
+----
+oc config get-contexts|grep ${OCP_PROD_CLUSTER#*/}|grep ${OCP_PROD_NAMESPACE}
 oc config rename-context <contextname> prod
 ----
 
@@ -103,7 +133,7 @@ oc config use-context prod
 Then create the secret
 [source,sh,role="copypaste"]
 ----
-oc create -f secret.yaml
+oc apply -f secret.yaml
 ----
 
 Link the secret to `default` service account 
@@ -122,7 +152,7 @@ oc config use-context dev
 Then create the secret
 [source,sh,role="copypaste"]
 ----
-oc create -f secret.yaml
+oc apply -f secret.yaml
 ----
 
 Link the secret to `pipeline` and `default` service account 
@@ -135,21 +165,18 @@ oc secrets link default $SSO_USERNAME-generic-pull-secret
 
 #### Kafka setup
 
-For testing the pipeline using the same Kafka for Prod and Dev, we will need to configure the cluster by removing mTLS for external authentication.
+For testing the pipeline we will the same Kafka for Prod and Dev. Kafka cluster will need to be reconfigured in order to remove mTLS for external authentication.
 For this use the following command still on {{OCP_DEV_CLUSTER}} cluster.
 
 [source,sh,role="copypaste"]
 ----
-oc patch kafka names-cluster --type merge --patch '{"spec": {"kafka": {"listeners":{"external": {"type": "route" }}}}}'
+oc patch -n $OCP_DEV_KAFKA_NAMESPACE kafka names-cluster --type merge --patch '{"spec": {"kafka": {"listeners":{"external": {"type": "route" }}}}}'
 ----
 
 Then we'll need to extract the Kafka Bootstrap Service and Route to be used later in Quarkus application configuration.
-
 
 [source,sh,role="copypaste"]
 ----
 export OCP_DEV_KAFKA_SVC=$(oc get svc -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $1}'|head -1).${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
 export OCP_DEV_KAFKA_ROUTE=$(oc get route -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $2}'|head -1):443
 ----
-
-
