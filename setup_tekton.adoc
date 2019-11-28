@@ -139,7 +139,7 @@ oc apply -f secret.yaml
 Link the secret to `default` service account 
 [source,sh,role="copypaste"]
 ----
-oc secrets link default $SSO_USERNAME-generic-pull-secret 
+oc secrets link default $SSO_USERNAME-generic-pull-secret --for=pull
 ----
 
 ##### DEV
