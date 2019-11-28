@@ -275,7 +275,7 @@ quarkus-deploy   41s
 
 From Developer Console > Pipelines
 
-image::tektonpipeline[ Dev Pipeline ]
+image::tekton1.png[ Dev Pipeline ]
 
 === Launch the pipeline
 
@@ -301,7 +301,7 @@ Showing logs...
 
 == Green
 
-image::tektongreen.png[ Green Pipeline ]
+image::tekton2.png[ Green Pipeline ]
 
 == Verify
 
