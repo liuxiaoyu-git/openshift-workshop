@@ -314,3 +314,13 @@ image::tekton2.png[ Green Pipeline ]
 ----
 oc get pod -lapp=people
 ----
+
+== Cleanup
+
+Now let's cleanup our application.
+
+[source,sh,role="copypaste"]
+----
+oc delete all -l app=people --context dev
+oc delete all -l app=people --context prod
+----
