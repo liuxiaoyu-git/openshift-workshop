@@ -24,7 +24,8 @@ export OCP_DEV_CLUSTER={{OCP_DEV_CLUSTER}}
 export OCP_PROD_NAMESPACE={{OCP_PROD_NAMESPACE}}
 export OCP_DEV_NAMESPACE={{OCP_DEV_NAMESPACE}}
 export OCP_DEV_KAFKA_NAMESPACE=<dev-kafka-namespace>
-export USERNAME=<my_sso_username>
+export OCP_DEV_KAFKA_APP=<dev-kafka-bootstrap-service-name>
+export SSO_USERNAME=<my_sso_username>
 ----
 
 
