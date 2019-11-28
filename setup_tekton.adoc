@@ -94,6 +94,24 @@ For this lab, we'll use the internal Quay registry. Quay is configured to use Re
 
 Now it's time to link the secrets.
 
+##### PROD
+[source,sh,role="copypaste"]
+----
+oc config use-context prod
+----
+
+Then create the secret
+[source,sh,role="copypaste"]
+----
+oc create -f secret.yaml
+----
+
+Link the secret to `default` service account 
+[source,sh,role="copypaste"]
+----
+oc secrets link default $SSO_USERNAME-generic-pull-secret 
+----
+
 ##### DEV
 
 [source,sh,role="copypaste"]
@@ -115,7 +133,18 @@ oc secrets link pipeline $SSO_USERNAME-generic-pull-secret
 oc secrets link default $SSO_USERNAME-generic-pull-secret 
 ----
 
-Additionally, while still connected to Dev cluster, extract Kafka endpoints:
+#### Kafka setup
+
+For testing the pipeline using the same Kafka for Prod and Dev, we will need to configure the cluster by removing mTLS for external authentication.
+For this use the following command still on {{OCP_DEV_CLUSTER}} cluster.
+
+[source,sh,role="copypaste"]
+----
+oc patch kafka names-cluster --type merge --patch '{"spec": {"kafka": {"listeners":{"external": {"type": "route" }}}}}'
+----
+
+Then we'll need to extract the Kafka Bootstrap Service and Route to be used later in Quarkus application configuration.
+
 
 [source,sh,role="copypaste"]
 ----
@@ -124,20 +153,3 @@ export OCP_DEV_KAFKA_ROUTE=$(oc get route -n $OCP_DEV_KAFKA_NAMESPACE|awk '/boot
 ----
 
 
-##### PROD
-[source,sh,role="copypaste"]
-----
-oc config use-context prod
-----
-
-Then create the secret
-[source,sh,role="copypaste"]
-----
-oc create -f secret.yaml
-----
-
-Link the secret to `default` service account 
-[source,sh,role="copypaste"]
-----
-oc secrets link default $SSO_USERNAME-generic-pull-secret 
-----
