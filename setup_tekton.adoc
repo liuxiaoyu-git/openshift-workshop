@@ -19,13 +19,14 @@ Let's define the following environment variables in order to help us to customiz
 INFO: Append `-<username>` to the OCP_PROD_NAMESPACE and OCP_DEV_NAMESPACE variable definition.
 
 ----
+export SSO_USERNAME=<my_sso_username>
+export OCP_DEV_KAFKA_NAMESPACE=<dev-kafka-namespace>
+
 export OCP_PROD_CLUSTER={{OCP_PROD_CLUSTER}}
 export OCP_DEV_CLUSTER={{OCP_DEV_CLUSTER}}
 export OCP_PROD_NAMESPACE={{OCP_PROD_NAMESPACE}}
 export OCP_DEV_NAMESPACE={{OCP_DEV_NAMESPACE}}
-export OCP_DEV_KAFKA_NAMESPACE=<dev-kafka-namespace>
-export OCP_DEV_KAFKA_APP=<dev-kafka-bootstrap-service-name>
-export SSO_USERNAME=<my_sso_username>
+
 ----
 
 
@@ -109,9 +110,17 @@ oc create -f secret.yaml
 Link the secret to `pipeline` and `default` service account 
 [source,sh,role="copypaste"]
 ----
-oc secrets link pipeline <username>-generic-pull-secret --for=pull
-oc secrets link pipeline <username>-generic-pull-secret 
-oc secrets link default <username>-generic-pull-secret 
+oc secrets link pipeline $SSO_USERNAME-generic-pull-secret --for=pull
+oc secrets link pipeline $SSO_USERNAME-generic-pull-secret 
+oc secrets link default $SSO_USERNAME-generic-pull-secret 
+----
+
+Additionally, while still connected to Dev cluster, extract Kafka endpoints:
+
+[source,sh,role="copypaste"]
+----
+export OCP_DEV_KAFKA_SVC=$(oc get svc -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $1}'|head -1).${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
+export OCP_DEV_KAFKA_ROUTE=$(oc get route -n $OCP_DEV_KAFKA_NAMESPACE|awk '/bootstrap/ {print $2}'|head -1)
 ----
 
 
@@ -130,5 +139,5 @@ oc create -f secret.yaml
 Link the secret to `default` service account 
 [source,sh,role="copypaste"]
 ----
-oc secrets link default <username>-generic-pull-secret 
+oc secrets link default $SSO_USERNAME-generic-pull-secret 
 ----

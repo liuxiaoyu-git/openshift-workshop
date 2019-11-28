@@ -58,16 +58,16 @@ metadata:
   name: quarkus-config
   namespace: ${OCP_PROD_NAMESPACE}
 data:
-  application.properties: >-
+  application.properties: |
 
     quarkus.hibernate-orm.database.generation=drop-and-create
 
-    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=${OCP_DEV_KAFKA_APP}-${OCP_DEV_KAFKA_NAMESPACE}.${OCP_DEV_DOMAIN}:9094
+    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=${OCP_DEV_KAFKA_ROUTE}
     %prod.mp.messaging.outgoing.generated-name.connector=smallrye-kafka
-    %prod.mp.messaging.outgoing.generated-name.topic=realnames
+    %prod.mp.messaging.outgoing.generated-name.topic=names
     %prod.mp.messaging.outgoing.generated-name.value.serializer=org.apache.kafka.common.serialization.StringSerializer
 
-    %prod.mp.messaging.incoming.names.bootstrap.servers=${OCP_DEV_KAFKA_APP}-${OCP_DEV_KAFKA_NAMESPACE}.${OCP_DEV_DOMAIN}:9094
+    %prod.mp.messaging.incoming.names.bootstrap.servers=${OCP_DEV_KAFKA_ROUTE}
     %prod.mp.messaging.incoming.names.connector=smallrye-kafka
     %prod.mp.messaging.incoming.names.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 EOF
@@ -126,14 +126,14 @@ metadata:
   name: quarkus-config
   namespace: ${OCP_PROD_NAMESPACE}
 data:
-  application.properties: >-
+  application.properties: |
     quarkus.hibernate-orm.database.generation=drop-and-create
-    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=${OCP_DEV_KAFKA_APP}.${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
+    %prod.mp.messaging.outgoing.generated-name.bootstrap.servers=${OCP_DEV_KAFKA_SVC}
     %prod.mp.messaging.outgoing.generated-name.connector=smallrye-kafka
     %prod.mp.messaging.outgoing.generated-name.topic=names
     %prod.mp.messaging.outgoing.generated-name.value.serializer=org.apache.kafka.common.serialization.StringSerializer
 
-    %prod.mp.messaging.incoming.names.bootstrap.servers=${OCP_DEV_KAFKA_APP}.${OCP_DEV_KAFKA_NAMESPACE}.svc.cluster.local:9092
+    %prod.mp.messaging.incoming.names.bootstrap.servers=${OCP_DEV_KAFKA_SVC}
     %prod.mp.messaging.incoming.names.connector=smallrye-kafka
     %prod.mp.messaging.incoming.names.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 EOF
